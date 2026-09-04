@@ -1297,10 +1297,14 @@
   /* 入场视频：播完自动进入（无论视频是否正常，最多 4 秒必定进入） */
   var preloaderEl = document.getElementById('preloader');
   var introVideo = document.getElementById('intro-video');
-  if (portfolioReturn !== null) {
+  var skipIntro = false;
+  try { if (localStorage.getItem('skipIntro') === '1') skipIntro = true; } catch (e) {}
+  try { if (/[?&]back=1/.test(location.search)) skipIntro = true; } catch (e) {}
+  if (portfolioReturn !== null || skipIntro) {
     /* 返回时不播视频，直接显示页面 */
     if (preloaderEl) preloaderEl.classList.add('hide');
     introVideo = null;
+    try { localStorage.removeItem('skipIntro'); } catch (e) {}
   }
   function hidePreloader() {
     if (!preloaderEl || preloaderEl.classList.contains('hide')) return;
@@ -1361,6 +1365,7 @@
   projectCards.forEach(function (a) {
     a.addEventListener('click', function () {
       try { sessionStorage.setItem('portfolioScroll', String(window.scrollY)); } catch (e) {}
+      try { localStorage.setItem('skipIntro', '1'); } catch (e) {}
     });
   });
   if (portfolioReturn !== null) {
