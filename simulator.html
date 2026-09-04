@@ -3,547 +3,97 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>驾考模拟器体验设计思考 | 吴季</title>
+<title>智能模拟器 | 吴季</title>
 <style>
-  :root {
-    --bg: #131415;
-    --panel: rgba(255,255,255,0.045);
-    --panel-2: rgba(255,255,255,0.03);
-    --line: rgba(255,255,255,0.09);
-    --txt: #f4f4f5;
-    --txt-dim: #a1a1aa;
-    --txt-faint: #71717a;
-    --acc: #a855f7;
-    --acc-2: #7c3aed;
-    --acc-soft: rgba(168,85,247,0.14);
-    --green: #34d399;
-    --amber: #fbbf24;
-    --red: #f87171;
-    --ease: cubic-bezier(0.22,1,0.36,1);
-  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    background: var(--bg);
-    color: var(--txt);
-    font-family: "Inter", "PingFang SC", "Noto Sans SC", -apple-system, sans-serif;
+    background: #131415;
+    color: #f4f4f5;
+    font-family: "Inter", "PingFang SC", "Noto Sans SC", sans-serif;
     min-height: 100vh;
-    line-height: 1.7;
-    -webkit-font-smoothing: antialiased;
   }
-  img { display: block; max-width: 100%; }
-
-  /* ── 顶部 ── */
   header {
     position: sticky; top: 0; z-index: 100;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 28px;
-    background: linear-gradient(180deg, rgba(19,20,21,0.85), rgba(19,20,21,0.35));
-    backdrop-filter: blur(14px) saturate(140%);
-    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    display: flex; align-items: center; gap: 16px;
+    padding: 18px 28px;
+    background: linear-gradient(180deg, rgba(19,20,21,0.88), rgba(19,20,21,0.2));
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
   }
   .back-btn {
     width: 44px; height: 44px; border-radius: 50%;
-    display: inline-flex; align-items: center; justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     background: rgba(255,255,255,0.10);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
     border: 1px solid rgba(255,255,255,0.18);
     color: #fff; text-decoration: none;
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 8px 24px rgba(0,0,0,0.30);
-    transition: transform .2s var(--ease), background .3s;
+    transition: transform 0.2s cubic-bezier(0.22,1,0.36,1), background 0.3s;
   }
   .back-btn:hover { transform: scale(1.08); background: rgba(255,255,255,0.16); }
   .back-btn svg { width: 18px; height: 18px; }
-  .side-tabs {
-    display: flex; gap: 4px; padding: 6px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.16);
-    border-radius: 999px;
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-  }
-  .side-tabs a {
-    position: relative; z-index: 1;
-    display: inline-flex; align-items: center; justify-content: center;
-    height: 34px; padding: 0 14px;
-    font-size: 13px; font-weight: 300; color: #fff;
-    text-decoration: none; border-radius: 999px;
-    white-space: nowrap;
-  }
-  .side-tabs a.active { background: #fff; color: #000; font-weight: 600; }
-  @media (max-width: 768px) {
-    header { padding: 12px 16px; }
-    .side-tabs { padding: 4px; gap: 2px; }
-    .side-tabs a { height: 30px; padding: 0 10px; font-size: 11px; }
-    .back-btn { width: 38px; height: 38px; }
-  }
-
-  main { max-width: 1160px; margin: 0 auto; padding: 0 20px 100px; }
-
-  /* ── HERO ── */
-  .hero {
-    position: relative;
-    margin: 28px 0 72px;
-    border-radius: 30px;
-    overflow: hidden;
-    border: 1px solid var(--line);
-    background: #0b0c0d;
-  }
-  .hero-media { position: relative; aspect-ratio: 16 / 5; overflow: hidden; }
-  .hero-media img { width: 100%; height: 100%; object-fit: cover; opacity: .55; }
-  .hero-media::after {
-    content: ""; position: absolute; inset: 0;
-    background: linear-gradient(180deg, rgba(11,12,13,0.15) 0%, rgba(11,12,13,0.55) 70%, rgba(11,12,13,0.92) 100%);
-  }
-  .hero-content { position: absolute; left: 0; right: 0; bottom: 0; padding: 34px 40px 38px; z-index: 2; }
-  .hero .label {
-    font-size: 12px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase;
-    color: #d8b4fe; margin-bottom: 12px;
-  }
-  .hero h1 {
-    font-size: clamp(1.9rem, 5.2vw, 3.3rem);
-    font-weight: 900; letter-spacing: -0.03em; line-height: 1.15;
-    margin-bottom: 14px;
-  }
-  .hero .sub { font-size: 15px; color: #d4d4d8; max-width: 760px; }
-  .hero .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
-  .hero .chip {
-    font-size: 12px; padding: 5px 12px; border-radius: 999px;
-    background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.16);
-    color: #e4e4e7;
-  }
-  @media (max-width: 768px) {
-    .hero-content { padding: 20px 20px 24px; }
-    .hero .sub { font-size: 13.5px; }
-  }
-
-  /* ── 章节 ── */
-  section { margin-bottom: 88px; scroll-margin-top: 90px; }
-  .sec-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 14px; }
-  .sec-num {
-    font-size: 15px; font-weight: 800; letter-spacing: .06em;
-    background: linear-gradient(135deg, var(--acc), var(--acc-2));
-    -webkit-background-clip: text; background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-  .sec-head h2 { font-size: clamp(1.35rem, 3vw, 1.9rem); font-weight: 900; letter-spacing: -0.02em; }
-  .sec-en { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--txt-faint); font-weight: 600; }
-  .lead { color: var(--txt-dim); font-size: 15px; max-width: 860px; margin-bottom: 30px; }
-  .lead b { color: var(--txt); font-weight: 600; }
-
-  /* 卡片网格 */
-  .grid { display: grid; gap: 16px; }
-  .grid-2 { grid-template-columns: repeat(2, 1fr); }
-  .grid-3 { grid-template-columns: repeat(3, 1fr); }
-  @media (max-width: 860px) { .grid-3 { grid-template-columns: 1fr; } }
-  @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
-
-  .card {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 22px;
-    padding: 26px 26px 22px;
-  }
-  .card .card-tag {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 11px; font-weight: 700; letter-spacing: .1em;
-    color: #d8b4fe; margin-bottom: 10px;
-  }
-  .card h3 { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 8px; }
-  .card p { font-size: 14px; color: var(--txt-dim); }
-  .card .num {
-    width: 34px; height: 34px; border-radius: 12px;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: var(--acc-soft); border: 1px solid rgba(168,85,247,0.30);
-    color: #d8b4fe; font-weight: 800; font-size: 13px;
-    margin-bottom: 14px;
-  }
-
-  /* 规则条（03 章节） */
-  .rule {
-    display: grid; grid-template-columns: 72px 1fr 1.35fr;
-    gap: 22px; align-items: center;
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 24px;
-    padding: 26px 28px;
-    margin-bottom: 16px;
-  }
-  .rule .r-num {
-    width: 56px; height: 56px; border-radius: 18px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, rgba(168,85,247,0.22), rgba(124,58,237,0.10));
-    border: 1px solid rgba(168,85,247,0.32);
-  }
-  .rule .r-num b { font-size: 19px; color: #e9d5ff; line-height: 1; }
-  .rule .r-num span { font-size: 9px; letter-spacing: .14em; color: #a78bfa; margin-top: 3px; text-transform: uppercase; }
-  .rule .r-body h3 { font-size: 19px; font-weight: 800; margin-bottom: 8px; }
-  .rule .r-body p { font-size: 14px; color: var(--txt-dim); }
-  .rule .r-shot { border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: #0b0c0d; }
-  .rule .r-shot img { width: 100%; height: auto; }
-  @media (max-width: 860px) {
-    .rule { grid-template-columns: 56px 1fr; }
-    .rule .r-shot { grid-column: 1 / -1; }
-  }
-
-  /* 大图 / 图注 */
-  .shot { border-radius: 22px; overflow: hidden; border: 1px solid var(--line); background: #0b0c0d; }
-  .shot img { width: 100%; height: auto; }
-  .cap { font-size: 12.5px; color: var(--txt-faint); margin-top: 10px; }
-  .cap b { color: #d8b4fe; font-weight: 600; }
-
-  /* 流程箭头 */
-  .flow { display: flex; align-items: stretch; gap: 12px; flex-wrap: wrap; }
-  .flow .shot { flex: 1; min-width: 240px; }
-  .flow .arrow { align-self: center; color: var(--acc); font-size: 22px; font-weight: 800; }
-
-  /* 数据条 */
-  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 26px; }
-  @media (max-width: 720px) { .stats { grid-template-columns: repeat(2, 1fr); } }
-  .stat {
-    background: var(--panel); border: 1px solid var(--line); border-radius: 20px;
-    padding: 22px 18px; text-align: center;
-  }
-  .stat b { display: block; font-size: 26px; font-weight: 900; color: #e9d5ff; letter-spacing: -0.02em; }
-  .stat span { font-size: 12.5px; color: var(--txt-dim); }
-
-  /* 结尾价值 */
-  .value {
-    background: linear-gradient(135deg, rgba(168,85,247,0.10), rgba(124,58,237,0.04));
-    border: 1px solid rgba(168,85,247,0.25);
-    border-radius: 26px; padding: 34px 36px;
-  }
-  .value ul { list-style: none; }
-  .value li {
-    position: relative; padding-left: 22px; margin-bottom: 10px;
-    color: #d4d4d8; font-size: 14.5px;
-  }
-  .value li::before { content: ""; position: absolute; left: 2px; top: 11px; width: 7px; height: 7px; border-radius: 2px; background: var(--acc); }
-  .value .todo { color: var(--amber); font-size: 13px; margin-top: 18px; }
-  .value .todo b { font-weight: 700; }
-
+  .header-title { font-size: 15px; font-weight: 600; letter-spacing: 0.02em; color: rgba(255,255,255,0.92); }
+  main { max-width: 1200px; margin: 0 auto; padding: 20px 20px 90px; }
+  .works { display: flex; flex-direction: column; gap: 15px; }
+  .work { width: 100%; border-radius: 30px; overflow: hidden; background: transparent; }
+  .work img { display: block; width: 100%; height: auto; }
+  .loading { text-align: center; color: #71717a; font-size: 13px; padding: 60px 0; }
   footer { text-align: center; padding: 30px 20px 46px; color: #52525b; font-size: 12px; }
   @media (max-width: 600px) {
-    main { padding: 0 14px 70px; }
-    section { margin-bottom: 64px; }
+    header { padding: 12px 16px; }
+    main { padding: 12px 12px 70px; }
+    .work { border-radius: 20px; }
+    .works { gap: 10px; }
   }
 </style>
 </head>
 <body>
-
-<header>
-  <a class="back-btn" href="index.html" aria-label="返回作品集">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-  </a>
-  <nav class="side-tabs" aria-label="项目导航">
-    <a href="project.html?id=1">驾考宝典</a>
-    <a href="project.html?id=4">图灵灵</a>
-    <a href="simulator.html" class="active">智能模拟器</a>
-    <a href="project.html?id=2">智慧驾校</a>
-  </nav>
-</header>
-
-<main>
-
-  <!-- HERO -->
-  <div class="hero">
-    <div class="hero-media">
-      <img src="assets/images/projects/p3/16-曲屏-3840x1080.jpg" alt="驾考模拟器曲屏 3840×1080 驾驶界面">
-    </div>
-    <div class="hero-content">
-      <p class="label">驾考宝典 · 智能驾驶模拟器 · 体验设计思考</p>
-      <h1>驾考模拟器体验设计思考</h1>
-      <p class="sub">从「手机刷题」到「真车驾驶舱」——一款把<b>枯燥驾驶学习变成愉快闯关体验</b>的智能驾驶模拟器：技能闯关、通关条件、考核徽章、排行榜、通关证书，让学员像打游戏一样主动练车，并与驾考宝典 APP 生态打通，构建「线上学 → 模拟练 → 真车考」的完整闭环。</p>
-      <div class="chips">
-        <span class="chip">硬件终端 UI</span>
-        <span class="chip">曲屏 3840×1080</span>
-        <span class="chip">多车型适配</span>
-        <span class="chip">ToB 驾校场景</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- 01 模拟器是什么 -->
-  <section id="what">
-    <div class="sec-head"><span class="sec-num">01</span><h2>驾考模拟器是什么</h2><span class="sec-en">What is it</span></div>
-    <p class="lead">模拟器是部署在驾校的智能驾驶训练设备（阿尔法幻影模拟器）：通过<b>方向盘、离合、油门、刹车、挡位、灯光</b>等真实驾驶部件 + 超宽曲屏，1:1 还原考试场地与交规扣分逻辑，让学员在真车练习之前，就能低成本、零风险地完成基础操作与考试项目训练。而这一切体验的底层命题只有一个——<b>让枯燥的驾驶学习变得愉快、游戏闯关化</b>。</p>
-    <div class="grid grid-2">
-      <figure>
-        <div class="shot"><img src="assets/images/projects/p3/01-一级入口.jpg" alt="一级入口：基础训练 / 科目二 / 科目三 / 安全驾驶"></div>
-        <figcaption class="cap"><b>一级入口</b> · 驾驶基础 15/15、科目二 10/15、科目三 00/15、安全驾驶课，训练进度一屏掌握</figcaption>
-      </figure>
-      <figure>
-        <div class="shot"><img src="assets/images/projects/p3/18-欢迎-科目二.jpg" alt="首次登录学习路径规划"></div>
-        <figcaption class="cap"><b>首次登录</b> · 根据学员科目进度自动规划「基础训练 → 科目二 → 科目三」学习路径</figcaption>
-      </figure>
-    </div>
-  </section>
-
-  <!-- 02 差异 -->
-  <section id="diff">
-    <div class="sec-head"><span class="sec-num">02</span><h2>相比手机刷题 / 真车练车，模拟器的差异</h2><span class="sec-en">Differences</span></div>
-    <p class="lead">模拟器处于「手机 App」与「真车」之间的第三空间：它继承了真车的驾驶操作，又保留了软件的确定性、数据化与零风险。这带来了三个维度的改变。</p>
-    <div class="grid grid-3">
-      <div class="card">
-        <div class="num">01</div>
-        <h3>场景的改变</h3>
-        <p>从「随时随地刷题」到「固定座舱驾驶」。学员坐在真实驾驶舱内，视线从手机小屏转移到 2m+ 超宽曲屏，身体姿态、操作方式与信息获取路径完全不同。</p>
-      </div>
-      <div class="card">
-        <div class="num">02</div>
-        <h3>用户的改变</h3>
-        <p>从「个人自学」到「驾校多人线下场景」。计时刷卡计费、教练在场、不同年龄与基础的学员共用设备，设计必须同时服务学员、教练与驾校运营三方。</p>
-      </div>
-      <div class="card">
-        <div class="num">03</div>
-        <h3>交互的改变</h3>
-        <p>从「点击 / 滑动」到「驾驶操作」。方向盘、离合、油门、刹车、挡位、后视镜，交互放大为体感操作，任何 UI 都不能干扰驾驶行为本身。</p>
-      </div>
-    </div>
-    <div class="grid grid-2" style="margin-top:16px;">
-      <figure>
-        <div class="shot"><img src="assets/images/projects/p3/05-内部视角-教学提示.jpg" alt="驾驶舱内部视角与教学提示"></div>
-        <figcaption class="cap"><b>驾驶舱内部视角</b> · 转向、挡位、离合、转速、时速、灯光同屏呈现，驾驶信息与教学提示分层展示</figcaption>
-      </figure>
-      <figure>
-        <div class="shot"><img src="assets/images/projects/p3/12-学员刷卡.jpg" alt="IC 卡 / 身份证刷卡登录"></div>
-        <figcaption class="cap"><b>多身份接入</b> · 刷卡 / 人脸 / 扫码 / 证件号 / 游客，兼容计时与非计时驾校的线下运营</figcaption>
-      </figure>
-    </div>
-  </section>
-
-  <!-- 03 核心策略：游戏化闯关 -->
-  <section id="gamify">
-    <div class="sec-head"><span class="sec-num">03</span><h2>核心策略：把学车变成闯关游戏</h2><span class="sec-en">Gameful Design</span></div>
-    <p class="lead">模拟器真正要解决的，是<b>「枯燥」和「畏难」</b>：真车练车重复、紧张、缺乏反馈，学员不想练、不敢练。我们把整个练车流程包装成一场场小游戏——<b>技能闯关、通关条件、考核徽章、排行榜、通关证书、精彩瞬间</b>，让学员像打游戏一样，一关一关停不下来。</p>
-    <div class="grid grid-3">
-      <div class="card">
-        <div class="num">01</div>
-        <h3>技能即关卡</h3>
-        <p>把驾驶技能拆成 8 个可考核关卡（方向盘 / 挡位 / 灯光 / 停车起步…），从易到难形成学习阶梯，每过一关都有「考核已通过」的正反馈。</p>
-      </div>
-      <div class="card">
-        <div class="num">02</div>
-        <h3>通关条件量化</h3>
-        <p>每个项目明确「考试最低次数 / 考试通过率 / 练习最低时长」，目标看得见、够得着，「练到什么程度能考」一目了然。</p>
-      </div>
-      <div class="card">
-        <div class="num">03</div>
-        <h3>激励与炫耀</h3>
-        <p>考试通过即 PASS 徽章，通关证书、排行榜让进步被看见；练车精彩瞬间自动生成短视频扫码分享——练车成果变成社交货币。</p>
-      </div>
-    </div>
-    <figure style="margin-top:16px;">
-      <div class="flow">
-        <figure class="shot"><img src="assets/images/projects/p3/11-基础训练.jpg" alt="技能闯关"><figcaption class="cap">技能闯关</figcaption></figure>
-        <span class="arrow">→</span>
-        <figure class="shot"><img src="assets/images/projects/p3/02-二级菜单通关条件.jpg" alt="通关条件"><figcaption class="cap">通关条件</figcaption></figure>
-        <span class="arrow">→</span>
-        <figure class="shot"><img src="assets/images/projects/p3/08-考试结束-完美通过.jpg" alt="PASS 徽章"><figcaption class="cap">PASS 徽章</figcaption></figure>
-      </div>
-      <figcaption class="cap"><b>闯关循环</b> · 学（技能闯关）→ 练（通关条件达标）→ 考（模拟考试）→ 得（徽章 / 证书 / 排行 / 分享）→ 再玩（再考一遍 / 解锁下一关）</figcaption>
-    </figure>
-  </section>
-
-  <!-- 04 设计规则 -->
-  <section id="rules">
-    <div class="sec-head"><span class="sec-num">04</span><h2>大屏驾驶舱下如何定义设计规则</h2><span class="sec-en">Design Rules</span></div>
-    <p class="lead">驾驶舱不是「更大的手机」。观看距离远、注意力被驾驶行为占据、硬件形态多样，因此我们用五条规则约束界面：<b>布局容量 · 信息字号 · 图形细节 · 用色克制 · 焦点引擎</b>。</p>
-
-    <div class="rule">
-      <div class="r-num"><b>01</b><span>Layout</span></div>
-      <div class="r-body">
-        <h3>布局定义，有迹可循</h3>
-        <p>曲屏虽宽，信息容量却要克制。驾驶过程中一屏只保留 5–9 个关键信息（转速、时速、挡位、灯光、提示），遵循「米勒定律 7±2」，把干扰降到最低；主界面用「训练进度 + 模式入口」分区，一眼定位。</p>
-      </div>
-      <div class="r-shot"><img src="assets/images/projects/p3/01-一级入口.jpg" alt="一级入口布局"></div>
-    </div>
-
-    <div class="rule">
-      <div class="r-num"><b>02</b><span>Font</span></div>
-      <div class="r-body">
-        <h3>注意远距离信息展示</h3>
-        <p>座舱观看距离远，信息必须足够大、足够清晰。驾驶状态区（转速 / 时速 / 挡位 / 灯光）使用超大字号与高对比；教学步骤逐条呈现、编号明确，保证学员余光即可读取、不打断驾驶。</p>
-      </div>
-      <div class="r-shot"><img src="assets/images/projects/p3/04-内部视角-教学提示-延展.jpg" alt="上车准备步骤延展"></div>
-    </div>
-
-    <div class="rule">
-      <div class="r-num"><b>03</b><span>Icon</span></div>
-      <div class="r-body">
-        <h3>抓住图形细节</h3>
-        <p>驾驶相关图标以拟物、直观为优先：挡位、灯光、后视镜、传感器一眼可懂，让没有驾驶经验的学员也能无师自通。后视镜与辅助摄像机提供可视化开关，所见即所得。</p>
-      </div>
-      <div class="r-shot"><img src="assets/images/projects/p3/03-内部视角-后视镜设置.jpg" alt="后视镜可视化设置"></div>
-    </div>
-
-    <div class="rule">
-      <div class="r-num"><b>04</b><span>Color</span></div>
-      <div class="r-body">
-        <h3>屏幕虽艳，用色却要克制</h3>
-        <p>夜间、隧道等暗光驾驶场景下，界面采用深色低饱和配色，避免眩光与视觉疲劳；扣分、警告等关键状态用高亮色聚焦，但全屏色彩始终保持克制，还原真实驾驶的光感。</p>
-      </div>
-      <div class="r-shot"><img src="assets/images/projects/p3/05-内部视角-教学提示.jpg" alt="夜间驾驶深色界面"></div>
-    </div>
-
-    <div class="rule">
-      <div class="r-num"><b>05</b><span>Focus</span></div>
-      <div class="r-body">
-        <h3>焦点，再清晰一点</h3>
-        <p>教学提示、通关条件、扣分播报都需要明确的焦点层级——通过描边、高亮、放大等方式突出当前目标。通关条件把「次数 / 通过率 / 时长」三要素卡片化，学员练什么、差什么，一目了然。</p>
-      </div>
-      <div class="r-shot"><img src="assets/images/projects/p3/02-二级菜单通关条件.jpg" alt="通关条件焦点展示"></div>
-    </div>
-  </section>
-
-  <!-- 04 高效易用 -->
-  <section id="interaction">
-    <div class="sec-head"><span class="sec-num">05</span><h2>模拟器交互怎么做到高效易用</h2><span class="sec-en">Experience</span></div>
-
-    <div class="rule">
-      <div class="r-num"><b>01</b><span>Immersive</span></div>
-      <div class="r-body">
-        <h3>沉浸式驾驶体验</h3>
-        <p>首次登录即规划学习路径，上车前完成车型与后视镜设置，进入驾驶舱后教学提示跟随驾驶步骤逐条推进，配合「按触控板确定继续」的节奏控制——全程不需要离开驾驶位。</p>
-      </div>
-      <div class="flow">
-        <figure class="shot"><img src="assets/images/projects/p3/18-欢迎-科目二.jpg" alt="欢迎与路径规划"><figcaption class="cap">规划路径</figcaption></figure>
-        <span class="arrow">→</span>
-        <figure class="shot"><img src="assets/images/projects/p3/11-基础训练.jpg" alt="基础训练八项"><figcaption class="cap">基础训练</figcaption></figure>
-        <span class="arrow">→</span>
-        <figure class="shot"><img src="assets/images/projects/p3/05-内部视角-教学提示.jpg" alt="驾驶教学"><figcaption class="cap">驾驶教学</figcaption></figure>
-      </div>
-    </div>
-
-    <div class="rule">
-      <div class="r-num"><b>02</b><span>Play Control</span></div>
-      <div class="r-body">
-        <h3>一目了然的模式与结果</h3>
-        <p>教学模式 / 练习模式 / 考试模式三态清晰切换；考试结束即时给出得分、用时与扣分明细，支持回放与「再考一遍」，结果反馈直给、一屏看懂，练完即知道下一步练什么。</p>
-      </div>
-      <div class="flow">
-        <figure class="shot"><img src="assets/images/projects/p3/20-练习模式-结果完成.jpg" alt="练习完成"><figcaption class="cap">练习完成</figcaption></figure>
-        <span class="arrow">→</span>
-        <figure class="shot"><img src="assets/images/projects/p3/08-考试结束-完美通过.jpg" alt="考试完美通过"><figcaption class="cap">考试通过</figcaption></figure>
-      </div>
-    </div>
-
-    <div class="rule">
-      <div class="r-num"><b>03</b><span>Shortcut</span></div>
-      <div class="r-body">
-        <h3>快捷设置，缩短配置路径</h3>
-        <p>方向盘校验、传感器校准、抖动优化、自动挡信号、科目路线指引等高频配置集中收纳，支持一键应用与恢复默认。教练课前 1 分钟完成设备准备，学员随到随练。</p>
-      </div>
-      <div class="flow">
-        <figure class="shot"><img src="assets/images/projects/p3/22-设置-方向盘校验.jpg" alt="方向盘校验"><figcaption class="cap">方向盘 ±540° 校验</figcaption></figure>
-        <figure class="shot"><img src="assets/images/projects/p3/23-设置-模拟器抖动优化.jpg" alt="模拟器自定义设置"><figcaption class="cap">训练自定义</figcaption></figure>
-      </div>
-    </div>
-  </section>
-
-  <!-- 05 多硬件引导 -->
-  <section id="hardware">
-    <div class="sec-head"><span class="sec-num">06</span><h2>车型 / 硬件型号多样，如何准确进行用户引导</h2><span class="sec-en">Operation Guide</span></div>
-    <p class="lead">驾考车型多样，不同车型的离合点、挡位、仪表与视野手感完全不同；硬件端还有方向盘、曲屏、传感器等不同配置。如何让学员「上的哪台车、就还原哪台车」，是引导设计的核心难点。</p>
-    <div class="grid grid-3">
-      <div class="card">
-        <div class="num">01</div>
-        <h3>梳理所有车型</h3>
-        <p>建立车型库：雪铁龙爱丽舍、大众新捷达 / 桑塔纳、斯科达欣锐、现代索纳塔、传祺 GS3、比亚迪 F3 等，沉淀每款车型的驾驶参数与仪表样式。</p>
-      </div>
-      <div class="card">
-        <div class="num">02</div>
-        <h3>智能还原学员手中的车</h3>
-        <p>车型选择卡片化，当前车型高亮「已选择」；确认后整车驾驶参数（离合、挡位、仪表）随之切换，还原学员真实考试车型，实现「练什么、考什么」。</p>
-      </div>
-      <div class="card">
-        <div class="num">03</div>
-        <h3>传感器校验</h3>
-        <p>方向盘 ±540° 打满 / 回正校验、踏板与心率手环等传感器校准流程化，保证硬件状态可控、教学与计分数据准确。</p>
-      </div>
-    </div>
-    <div class="grid grid-2" style="margin-top:16px;">
-      <figure>
-        <div class="shot"><img src="assets/images/projects/p3/06-切换车型.jpg" alt="车型切换"></div>
-        <figcaption class="cap"><b>车型切换</b> · 雪铁龙-爱丽舍「已选择」，多车型卡片平铺</figcaption>
-      </figure>
-      <figure>
-        <div class="shot"><img src="assets/images/projects/p3/07-切换车型02.jpg" alt="车型切换 02"></div>
-        <figcaption class="cap"><b>车型确认</b> · 当前车型高亮 + 确认按钮，切换后驾驶参数即时生效</figcaption>
-      </figure>
-    </div>
-  </section>
-
-  <!-- 06 生态 -->
-  <section id="ecosystem">
-    <div class="sec-head"><span class="sec-num">07</span><h2>在模拟器生态中，我们还做了哪些事情</h2><span class="sec-en">Beyond the Device</span></div>
-
-    <div class="rule">
-      <div class="r-num"><b>01</b><span>Rules</span></div>
-      <div class="r-body">
-        <h3>与交规一致的扣分体系</h3>
-        <p>扣分项与真实驾考一致（中途停车、驻车制动器等），未通过时给出扣分明细 + 分页长文案，并通过答题强化规则记忆——模拟器不只是「练手」，更是「记规则」。</p>
-      </div>
-      <div class="flow">
-        <figure class="shot"><img src="assets/images/projects/p3/09-考试结束-未通过长文案.jpg" alt="未通过扣分明细"><figcaption class="cap">扣分明细</figcaption></figure>
-        <figure class="shot"><img src="assets/images/projects/p3/17-未通过答题.jpg" alt="规则答题"><figcaption class="cap">规则答题</figcaption></figure>
-      </div>
-    </div>
-
-    <div class="rule">
-      <div class="r-num"><b>02</b><span>Cross-screen</span></div>
-      <div class="r-body">
-        <h3>跨屏分享与 App 引流</h3>
-        <p>练车精彩瞬间自动生成短视频，扫码即可分享给教练与家人；退出时引导「回家用手机免费练」，将线下体验转化为驾考宝典 App 用户，形成「线下练 → 线上学」的运营闭环。</p>
-      </div>
-      <div class="flow">
-        <figure class="shot"><img src="assets/images/projects/p3/19-精彩视频分享.jpg" alt="精彩视频分享"><figcaption class="cap">精彩瞬间分享</figcaption></figure>
-        <figure class="shot"><img src="assets/images/projects/p3/25-退出宣传.jpg" alt="退出引流"><figcaption class="cap">退出引流</figcaption></figure>
-      </div>
-    </div>
-
-    <div class="rule">
-      <div class="r-num"><b>03</b><span>Safety</span></div>
-      <div class="r-body">
-        <h3>安全驾驶课程体系</h3>
-        <p>面向已拿证学员的安全驾驶能力测评与 8 课时付费课程（事故案例、危险驾驶体验、交通法规）。答题采用「转动方向盘选择、深踩油门确认」的驾驶式交互，让学习本身就在驾驶舱里发生。</p>
-      </div>
-      <div class="flow">
-        <figure class="shot"><img src="assets/images/projects/p3/14-安全驾驶体验课-首页.jpg" alt="安全驾驶课首页"><figcaption class="cap">课程首页</figcaption></figure>
-        <figure class="shot"><img src="assets/images/projects/p3/24-课程视频答题.jpg" alt="课程视频答题"><figcaption class="cap">驾驶式答题</figcaption></figure>
-      </div>
-    </div>
-
-    <div class="rule">
-      <div class="r-num"><b>04</b><span>User</span></div>
-      <div class="r-body">
-        <h3>多端登录与学员数据</h3>
-        <p>支持 IC 卡 / 身份证刷卡、人脸识别、扫码、证件号、游客多种登录方式，兼容计时与非计时驾校；训练记录沉淀为数据，结业自动生成毕业证书与训练分析报告。</p>
-      </div>
-      <div class="flow">
-        <figure class="shot"><img src="assets/images/projects/p3/15-扫码登录.jpg" alt="扫码登录"><figcaption class="cap">多方式登录</figcaption></figure>
-        <figure class="shot"><img src="assets/images/projects/p3/21-结业.jpg" alt="结业证书"><figcaption class="cap">结业报告</figcaption></figure>
-      </div>
-    </div>
-  </section>
-
-  <!-- 07 价值 -->
-  <section id="value">
-    <div class="sec-head"><span class="sec-num">08</span><h2>项目价值</h2><span class="sec-en">Value</span></div>
-    <div class="value">
-      <ul>
-        <li>用「闯关游戏化」重构学车体验：技能拆关卡、条件量化、即时正反馈，让枯燥练习变得愉快、有成就感</li>
-        <li>打通「驾考宝典 App + 线下模拟器」双端生态，形成线上学、线下练、真车考的完整链路</li>
-        <li>沉淀硬件驾驶模拟器的 UI 设计规范：布局容量、字号阶梯、用色克制、焦点引擎、多车型适配</li>
-        <li>用「驾驶式交互」替代「点击式交互」，让零基础学员也能独立完成全套训练</li>
-        <li>一套设计体系同时适配曲屏 / 方向盘 / 传感器等多硬件形态与多驾校运营模式</li>
-      </ul>
-      <p class="todo"><b>【待补充 · 建议补真实数据】</b>：覆盖驾校数量、累计上机学员数 / 时长、科目二 / 三考试通过率提升幅度、安全驾驶课付费转化率、App 扫码引流新增用户等。作品集里哪怕 2–3 个真实数字，说服力会翻倍。</p>
-    </div>
-  </section>
-
-</main>
-
-<footer>© 2026 吴季 · 高级UI设计师</footer>
-
+  <header>
+    <a class="back-btn" href="index.html#projects" aria-label="返回作品集">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </a>
+    <span class="header-title">智能模拟器 · 驾考模拟器体验设计</span>
+  </header>
+  <main>
+    <div class="loading" id="loading">作品加载中…</div>
+    <div class="works" id="works"></div>
+  </main>
+  <footer>© 2026 吴季 · 高级UI设计师</footer>
+<script>
+  (function () {
+    var works = document.getElementById('works');
+    var loading = document.getElementById('loading');
+    var base = 'assets/images/projects/p3/';
+    function append(img) {
+      if (loading) loading.remove();
+      var d = document.createElement('div');
+      d.className = 'work';
+      img.style.display = 'block';
+      d.appendChild(img);
+      works.appendChild(d);
+    }
+    function stop() {
+      if (loading) loading.remove();
+      if (!works.children.length) {
+        works.innerHTML = '<div style="text-align:center;color:#71717a;padding:60px 20px;line-height:2;">把图片命名为 <strong>1.png、2.png、3.png…</strong><br>放到 assets/images/projects/p3/ 即可自动展示</div>';
+      }
+    }
+    var miss = 0;
+    function tryIndex(n) {
+      if (n > 60) { stop(); return; }
+      var img = new Image();
+      img.onload = function () { miss = 0; append(img); tryIndex(n + 1); };
+      img.onerror = function () {
+        miss++;
+        if (miss >= 2) stop();
+        else tryIndex(n + 1);
+      };
+      img.src = base + n + '.png';
+    }
+    tryIndex(1);
+  })();
+</script>
 </body>
 </html>
