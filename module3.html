@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>模块3 · 视频互动（智慧驾校）</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #131415; color: #f4f4f5; font-family: "Inter", "PingFang SC", "Noto Sans SC", sans-serif; }
+
+  /* ── 放置容器：模块3 会自适应这个容器的宽度，改宽度即可 ── */
+  .module3-shell { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+
+  /* ════════ 模块三 · 一个整体（复制这一整块到任何页面即可） ════════ */
+  .module3 { border-radius: 30px; overflow: hidden; }
+  .inter3-stage {
+    position: relative; width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    overflow: hidden;
+    user-select: none;
+  }
+  .inter3-video {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .inter3-top {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: fill;
+    pointer-events: none;
+    z-index: 5;                    /* 图1 最顶层 */
+    transition: opacity 0.4s ease;
+  }
+  .inter3-top.hidden { opacity: 0; }
+  .inter3-mask {
+    position: absolute; top: 7.8%;   /* 84/1080 */
+    width: 13.85%;                   /* 266/1920 */
+    height: 92%;                     /* 993/1080 */
+    pointer-events: none;
+    z-index: 2;
+  }
+  .inter3-mask-left { left: 0; }
+  .inter3-mask-right { right: 0; }
+  .inter3-arrow {
+    position: absolute; bottom: 18.5%;  /* 离底部 200/1080 */
+    width: 2.6%; aspect-ratio: 5 / 8;   /* 50x80 @1x，整体随模块缩放 */
+    min-width: 22px; max-width: 50px;
+    padding: 0; border: none; background: transparent;
+    cursor: pointer; opacity: 0.92; z-index: 4;
+    transition: transform 0.25s, opacity 0.25s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .inter3-arrow img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .inter3-arrow-left { left: 1.1%; }   /* 21/1920 */
+  .inter3-arrow-right { right: 1.1%; }
+  .inter3-arrow:hover { opacity: 1; transform: scale(1.1); }
+  .inter3-arrow:active { transform: scale(0.94); }
+  .inter3-switch {
+    position: absolute; bottom: 5.3%; left: 5.5%;  /* 57/1080, 106/1920 */
+    width: 228.2%;                                /* 4381/1920 @1x，超出部分在视频区域外（overflow hidden 裁掉） */
+    height: auto;
+    z-index: 1; pointer-events: none;             /* 在遮罩下方 */
+    will-change: transform;
+  }
+  .inter3-stage img { display: block; }
+  @media (max-width: 768px) {
+    .inter3-arrow { min-width: 18px; }
+  }
+</style>
+</head>
+<body>
+  <div class="module3-shell">
+    <!-- ═══ 模块三整体：把下面这个 .module3 容器整体复制到任何页面 ═══ -->
+    <div class="module3" id="module3">
+      <div class="inter3-stage">
+        <video class="inter3-video" src="assets/images/projects/p2/03/撞车事故背景循环视频（路面静止版）.mp4" muted loop playsinline autoplay preload="metadata"></video>
+        <img class="inter3-top" src="assets/images/projects/p2/03/图1.png" alt="">
+        <img class="inter3-mask inter3-mask-left" src="assets/images/projects/p2/03/遮罩左.png" alt="">
+        <img class="inter3-mask inter3-mask-right" src="assets/images/projects/p2/03/遮罩右.png" alt="">
+        <button class="inter3-arrow inter3-arrow-left" type="button" aria-label="上一个"><img src="assets/images/projects/p2/03/箭头.png" alt=""></button>
+        <button class="inter3-arrow inter3-arrow-right" type="button" aria-label="下一个"><img src="assets/images/projects/p2/03/箭头 2.png" alt=""></button>
+        <img class="inter3-switch" src="assets/images/projects/p2/03/切换.png" alt="">
+      </div>
+    </div>
+    <!-- ═══ 模块三整体结束 ═══ -->
+  </div>
+
+<script>
+  (function () {
+    var root = document.getElementById('module3');
+    if (!root) return;
+    var strip = root.querySelector('.inter3-switch');
+    var stageEl = root.querySelector('.inter3-stage');
+    var SEGMENTS = 8;              /* 切换条 8 个名称段 */
+    var cur = 0;
+    var stepPx = 0;
+    function calc() {
+      /* 起点：左端距左 106px(设计稿)；收尾：右端距右 106px(设计稿)，整体随模块缩放 */
+      var stageW = stageEl.getBoundingClientRect().width;
+      var stripW = strip.getBoundingClientRect().width;
+      var gap = stageW * (106 / 1920);
+      stepPx = (stripW - (stageW - gap * 2)) / (SEGMENTS - 1);
+    }
+    function go(i) {
+      cur = (i + SEGMENTS) % SEGMENTS;
+      calc();
+      strip.style.transition = 'transform 0.55s cubic-bezier(0.22,1,0.36,1)';
+      strip.style.transform = 'translateX(' + (-cur * stepPx).toFixed(1) + 'px)';
+    }
+    calc();
+    root.querySelector('.inter3-arrow-left').addEventListener('click', function () { go(cur - 1); });
+    root.querySelector('.inter3-arrow-right').addEventListener('click', function () { go(cur + 1); });
+    window.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowLeft') go(cur - 1);
+      if (e.key === 'ArrowRight') go(cur + 1);
+    });
+    window.addEventListener('resize', function () { go(cur); });
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>项目详情 | 吴季</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: #131415;
+    color: #f4f4f5;
+    font-family: "Inter", "PingFang SC", "Noto Sans SC", sans-serif;
+    min-height: 100vh;
+  }
+  header {
+    position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center;
+    padding: 18px 28px;
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom: none;
+  }
+  .back-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.10);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: #ffffff;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), 0 8px 24px rgba(0,0,0,0.30);
+    transition: transform 0.2s var(--ease), background 0.3s, box-shadow 0.3s;
+  }
+  .back-btn:hover { transform: scale(1.08); background: rgba(255,255,255,0.16); box-shadow: inset 0 1px 0 rgba(255,255,255,0.26), 0 10px 30px rgba(0,0,0,0.36); }
+  .back-btn svg { width: 18px; height: 18px; }
+  /* 隐藏的 SVG 液态玻璃滤镜 */
+  .glass-tab-svg { position: absolute; width: 0; height: 0; overflow: hidden; opacity: 0; pointer-events: none; }
+  /* 顶部右上角项目 Tab（SVG 液态玻璃） */
+  .side-tabs {
+    position: fixed; top: 18px; right: 28px; left: auto;
+    transform: none;
+    z-index: 120;
+    display: flex; flex-direction: row; gap: 4px;
+    padding: 8px;
+    background: rgba(255,255,255,0.05);
+    -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.15);
+    backdrop-filter: blur(40px) saturate(200%) brightness(1.15); /* 兜底 */
+    backdrop-filter: url(#glass-tab-filter) saturate(1.05);       /* SVG 液态玻璃 */
+    border: 1px solid rgba(255,255,255,0.24);
+    border-radius: 999px;
+    box-shadow:
+      0 0 2px 1px rgba(255,255,255,0.22) inset,
+      0 0 10px 4px rgba(255,255,255,0.10) inset,
+      0 4px 16px rgba(17,17,26,0.05),
+      0 8px 24px rgba(17,17,26,0.05),
+      0 16px 56px rgba(17,17,26,0.05),
+      0 4px 16px rgba(17,17,26,0.05) inset,
+      0 8px 24px rgba(17,17,26,0.05) inset,
+      0 16px 56px rgba(17,17,26,0.05) inset;
+  }
+  .side-tabs a {
+    position: relative; z-index: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 34px; padding: 0 14px;
+    font-size: 13px; font-weight: 300; color: #ffffff;
+    text-decoration: none; border-radius: 999px;
+    transition: color 0.25s;
+    white-space: nowrap; line-height: 1;
+  }
+  .side-tabs a:hover { color: #ffffff; }
+  .side-tabs a.active { color: #000000; font-weight: 600; }
+  .side-tabs__thumb {
+    position: absolute; top: 8px; left: 0;
+    height: 34px; width: 0;
+    transition: width 0.45s cubic-bezier(0.22,1,0.36,1), transform 0.6s cubic-bezier(0.22,1,0.36,1);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .side-tabs__thumb-inner {
+    position: absolute; inset: 0;
+    background: #ffffff; border-radius: 999px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.7);
+    transition: transform 0.25s cubic-bezier(0.22,1,0.36,1), border-radius 0.12s cubic-bezier(0.3,0,0,1);
+  }
+  .side-tabs__thumb-inner.breathe {
+    animation: side-thumb-breathe 0.7s cubic-bezier(0.22,1,0.36,1);
+  }
+  @keyframes side-thumb-breathe {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.47); }
+    100% { transform: scale(1); }
+  }
+  @media (max-width: 768px) {
+    .side-tabs { top: 12px; right: 12px; padding: 6px; gap: 2px; }
+    .side-tabs a { height: 30px; padding: 0 9px; font-size: 11px; }
+    .side-tabs__thumb { top: 6px; height: 30px; }
+  }
+  main { max-width: 1200px; margin: 0 auto; padding: 40px 20px 90px; }
+  .project-intro { margin-bottom: 34px; }
+  .project-intro .label {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+    background: linear-gradient(180deg, rgba(168,85,247,1), rgba(168,85,247,0.2));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  .project-intro h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 900; letter-spacing: -0.03em; }
+  /* 作品从上到下平铺：间距 15px、圆角 30px */
+  .works {
+    display: flex; flex-direction: column; gap: 15px;
+  }
+  .work {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-radius: 30px;
+    overflow: hidden;
+  }
+  .work img, .work video {
+    display: block; width: 100%; height: auto;
+    object-fit: contain;
+  }
+  /* ── 互动模块（p2 智慧驾校 · 素材切换）── */
+  .work-interactive { border-radius: 30px; overflow: hidden; }
+  .inter-stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: url('assets/images/projects/p2/背景.png') center / cover no-repeat #131415;
+    display: flex; align-items: flex-end; justify-content: center; /* 素材与背景同宽、底部对齐 */
+    user-select: none;
+  }
+  .inter-frame {
+    position: relative;
+    width: 100%;
+    /* 素材与背景同宽，透明处透出背景 */
+  }
+  .inter-material { display: block; width: 100%; height: auto; transition: opacity 0.4s ease; }
+  .inter-material.is-switching { opacity: 0; }
+  .inter-arrow {
+    position: absolute; top: 58%; transform: translateY(-50%);
+    width: 2.6%; aspect-ratio: 5 / 8;
+    min-width: 22px; max-width: 50px;
+    padding: 0; border: none; background: transparent;
+    cursor: pointer; opacity: 0.9; z-index: 3;
+    transition: opacity 0.25s, transform 0.25s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .inter-arrow img { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .inter-arrow-left { left: 30px; }
+  .inter-arrow-right { right: 30px; }
+  .inter-arrow:hover { opacity: 1; transform: translateY(-50%) scale(1.08); }
+  .inter-arrow:active { transform: translateY(-50%) scale(0.94); }
+  @media (max-width: 768px) {
+    .inter-arrow { min-width: 18px; width: 3.2%; }
+    .inter-arrow-left { left: 16px; }
+    .inter-arrow-right { right: 16px; }
+  }
+  /* ── 互动模块 03：视频背景 + 顶层图 + 箭头/切换条 ── */
+  .work-interactive3 { border-radius: 30px; overflow: hidden; }
+  .has-m3 { position: relative; }
+  .work-m3-embed {
+    position: absolute;
+    left: 32.29%;   /* 620/1920 */
+    top: 14.47%;    /* 1060/7326 */
+    width: 62.40%;  /* 1198/1920 */
+    aspect-ratio: 16 / 9;
+    border-radius: 7px;
+    overflow: hidden;
+    z-index: 2;
+  }
+  /* ai/4 视频嵌入 6.png 底部手机蓝色区域 */
+  .work-video-embed {
+    position: absolute;
+    left: 38.33%;   /* 736/1920：比红块(740)左扩 4px */
+    top: 84.10%;    /* 6161/7326：比红块(6165)上扩 4px */
+    width: 23.28%;  /* 447/1920：红块宽 439 各扩 4px */
+    height: 12.26%; /* 898/7326：红块高 890 上下各扩 4px，完全盖住红色 */
+    border-radius: 0;  /* 实际圆角由 JS 按 原设计50px×显示缩放 计算 */
+    overflow: hidden;
+    z-index: 2;
+    background: #000;
+  }
+  .work-video-embed video {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .work-video-embed video::-webkit-media-controls { display: none !important; }
+
+  /* 模块3：1px 上下渐变边框（上 #A4AABC → 下 #45506C），随圆角 */
+  .work-m3-embed::before {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 7px;
+    padding: 1px;
+    background: linear-gradient(180deg, #A4AABC 0%, #45506C 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 6;
+  }
+  .inter3-stage {
+    position: relative; width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    overflow: hidden;
+    user-select: none;
+  }
+  .inter3-video {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .inter3-top {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: fill;
+    pointer-events: none;
+    z-index: 5;  /* 图1 最顶层 */
+    transition: opacity 0.4s ease;
+  }
+  .inter3-top.hidden { opacity: 0; }
+  .inter3-mask {
+    position: absolute; top: 7.8%;   /* 84/1080 */
+    width: 13.85%;                   /* 266/1920 */
+    height: 92%;                     /* 993/1080 */
+    pointer-events: none;
+    z-index: 2;
+  }
+  .inter3-mask-left { left: 0; }
+  .inter3-mask-right { right: 0; }
+  .inter3-arrow {
+    position: absolute; bottom: 18.5%;  /* 离底部 200/1080 */
+    width: 2.6%; aspect-ratio: 5 / 8;  /* 50x80 @1x，整体随模块缩放 */
+    min-width: 22px; max-width: 50px;
+    padding: 0; border: none; background: transparent;
+    cursor: pointer; opacity: 0.92; z-index: 4;
+    transition: transform 0.25s, opacity 0.25s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .inter3-arrow img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .inter3-arrow-left { left: 1.1%; }   /* 21/1920 */
+  .inter3-arrow-right { right: 1.1%; }
+  .inter3-arrow:hover { opacity: 1; transform: scale(1.1); }
+  .inter3-arrow:active { transform: scale(0.94); }
+  .inter3-switch {
+    position: absolute; bottom: 5.3%; left: 5.5%;  /* 57/1080, 106/1920 */
+    width: 228.2%;                                /* 4381/1920 @1x，超出部分在视频区域外（overflow hidden 裁掉） */
+    height: auto;
+    z-index: 1; pointer-events: none;             /* 在遮罩下方 */
+    will-change: transform;
+  }
+  /* 覆盖全局 .work img 规则，让 03 模块图片按 1:1 设计稿等比缩放 */
+  .work-interactive3 .inter3-top,
+  .work-interactive3 .inter3-mask,
+  .work-interactive3 .inter3-switch { width: auto; height: auto; }
+  .work-interactive3 .inter3-top { width: 100%; height: 100%; object-fit: fill; }
+  .work-interactive3 .inter3-mask { width: 13.85%; height: 92%; }
+  .work-interactive3 .inter3-switch { width: 228.2%; height: auto; }
+  @media (max-width: 768px) {
+    .inter3-arrow { min-width: 18px; }
+  }
+  .empty {
+    padding: 70px 24px; text-align: center;
+    color: #a1a1aa; font-size: 14px; line-height: 2;
+    border: 1px dashed rgba(168,85,247,0.35);
+    border-radius: 18px;
+  }
+  .empty strong { color: #d8b4fe; }
+  .loading { text-align: center; color: #71717a; font-size: 13px; padding: 40px 0; }
+  footer { text-align: center; padding: 30px 20px 46px; color: #52525b; font-size: 12px; }
+  @media (max-width: 600px) {
+    header { padding: 12px 16px; }
+    .header-title { font-size: 14px; }
+    main { padding: 24px 14px 70px; }
+    .works { gap: 10px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back-btn" href="index.html" id="back-link" aria-label="返回作品集">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+  </a>
+</header>
+
+<nav class="side-tabs" id="side-tabs">
+  <span class="side-tabs__thumb" id="side-tabs-thumb" aria-hidden="true"><span class="side-tabs__thumb-inner"></span></span>
+  <a href="project.html?id=1" data-pid="1">驾考宝典</a>
+  <a href="project.html?id=4" data-pid="4">图灵灵</a>
+  <a href="simulator.html">智能模拟器</a>
+  <a href="project.html?id=2" data-pid="2">智慧驾校</a>
+</nav>
+
+<svg class="glass-tab-svg" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs><filter id="glass-tab-filter" colorInterpolationFilters="sRGB" x="0%" y="0%" width="100%" height="100%"><feImage x="0" y="0" width="100%" height="100%" preserveAspectRatio="none" result="map" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%20400%20200%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22rg%22%20x1%3D%22100%25%22%20y1%3D%220%25%22%20x2%3D%220%25%22%20y2%3D%220%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%230000%22/%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22red%22/%3E%3C/linearGradient%3E%3ClinearGradient%20id%3D%22bg%22%20x1%3D%220%25%22%20y1%3D%220%25%22%20x2%3D%220%25%22%20y2%3D%22100%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%230000%22/%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22blue%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%22400%22%20height%3D%22200%22%20fill%3D%22black%22/%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%22400%22%20height%3D%22200%22%20rx%3D%22999%22%20fill%3D%22url%28%23rg%29%22/%3E%3Crect%20x%3D%220%22%20y%3D%220%22%20width%3D%22400%22%20height%3D%22200%22%20rx%3D%22999%22%20fill%3D%22url%28%23bg%29%22%20style%3D%22mix-blend-mode%3A%20screen%22/%3E%3Crect%20x%3D%227%22%20y%3D%227%22%20width%3D%22386%22%20height%3D%22186%22%20rx%3D%22999%22%20fill%3D%22hsl%280%200%25%2060%25%20/%200.8%29%22%20style%3D%22filter%3A%20blur%2811px%29%22/%3E%3C/svg%3E"/><feDisplacementMap in="SourceGraphic" in2="map" result="dispRed" scale="-145" xChannelSelector="R" yChannelSelector="G"/><feColorMatrix in="dispRed" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="red"/><feDisplacementMap in="SourceGraphic" in2="map" result="dispGreen" scale="-135" xChannelSelector="R" yChannelSelector="G"/><feColorMatrix in="dispGreen" type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0" result="green"/><feDisplacementMap in="SourceGraphic" in2="map" result="dispBlue" scale="-125" xChannelSelector="R" yChannelSelector="G"/><feColorMatrix in="dispBlue" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0" result="blue"/><feBlend in="red" in2="green" mode="screen" result="rg"/><feBlend in="rg" in2="blue" mode="screen" result="output"/><feGaussianBlur in="output" stdDeviation="6"/></filter></defs></svg>
+<main>
+  <div class="works" id="works">
+    <div class="loading" id="loading">作品加载中…</div>
+  </div>
+</main>
+
+<footer>© 2026 吴季 · 高级UI设计师</footer>
+
+<script>
+  (function () {
+    var names = {
+      '1': '驾考宝典',
+      '2': '智慧驾校',
+      '3': '智能模拟器',
+      '4': '图灵灵-一款AI全能图片和视频处理App',
+      '5': '易用性调研'
+    };
+    var params = new URLSearchParams(location.search);
+    var id = params.get('id') || '1';
+    if (id === '3') { location.replace('simulator.html'); return; } /* 智能模拟器已独立成页 */
+    var works = document.getElementById('works');
+    var loading = document.getElementById('loading');
+    var base = '';
+    var missStreak = 0;
+    var tabLinks = Array.prototype.slice.call(document.querySelectorAll('.side-tabs a'));
+    var thumb = document.getElementById('side-tabs-thumb');
+    var thumbInner = thumb ? thumb.querySelector('.side-tabs__thumb-inner') : null;
+    var sideBreatheTimer = null;
+    var customInjected = false;
+    var interactiveAppended = false;
+    var inter02Inserted = false;
+
+    function shrinkThumb() {
+      if (!thumbInner) return;
+      thumbInner.style.transition = 'transform 0.12s cubic-bezier(0.3,0,0,1), border-radius 0.12s cubic-bezier(0.3,0,0,1)';
+      thumbInner.style.transform = 'scale(1)';
+      thumbInner.style.borderRadius = '999px'; /* 变回默认胶囊 */
+    }
+    function breatheThumb() {
+      if (!thumbInner) return;
+      /* 滑动开始：放大成圆形 */
+      thumbInner.style.transition = 'transform 0.12s cubic-bezier(0.3,0,0,1), border-radius 0.12s cubic-bezier(0.3,0,0,1)';
+      thumbInner.style.transform = 'scale(1.47)';
+      thumbInner.style.borderRadius = '50%'; /* 圆形 */
+      clearTimeout(sideBreatheTimer);
+      /* 快速缩小：滑动 ~40% 就缩回，不等到达标签 */
+      sideBreatheTimer = setTimeout(shrinkThumb, 250);
+    }
+    function positionThumb(animate) {
+      var nav = document.getElementById('side-tabs');
+      var active = nav.querySelector('a.active');
+      if (!active || !thumb) return;
+      var navRect = nav.getBoundingClientRect();
+      var ar = active.getBoundingClientRect();
+      var borderLeft = parseFloat(getComputedStyle(nav).borderLeftWidth) || 0;
+      var left = (ar.left - navRect.left) - borderLeft;
+      var width = ar.width;
+      if (animate) {
+        thumb.style.width = width + 'px';
+        thumb.style.transform = 'translateX(' + left + 'px)';
+        breatheThumb();
+      } else {
+        thumb.style.transition = 'none';
+        thumb.style.width = width + 'px';
+        thumb.style.transform = 'translateX(' + left + 'px)';
+        if (thumbInner) {
+          thumbInner.style.transition = 'none';
+          thumbInner.style.transform = 'scale(1)';
+        }
+        void thumb.offsetWidth;
+        thumb.style.transition = 'width 0.45s cubic-bezier(0.22,1,0.36,1), transform 0.6s cubic-bezier(0.22,1,0.36,1)';
+      }
+    }
+
+    function append(img) {
+      var ld = document.getElementById('loading');
+      if (ld) ld.remove();
+      var div = document.createElement('div');
+      div.className = 'work';
+      img.style.display = 'block';
+      div.appendChild(img);
+      works.appendChild(div);
+      /* p2：把 02 互动模块插到第 2 位（紧跟第一张图之后） */
+      if (id === '2' && !inter02Inserted && div === works.firstElementChild) {
+        inter02Inserted = true;
+        var m2 = buildInteractive();
+        works.insertBefore(m2, div.nextSibling);
+      }
+      /* p2 的第 6 张图：把活体模块3覆盖到图上红色标记区域 */
+      if (id === '2' && img.getAttribute('src') && img.getAttribute('src').indexOf('/p2/6.png') !== -1) {
+        div.classList.add('has-m3');
+        var m3 = buildInteractive3();
+        m3.className = 'work-interactive3 work-m3-embed';
+        div.appendChild(m3);
+        /* 复用 ai/4 视频到 6.png 底部手机蓝色区域 */
+        var vw = document.createElement('div');
+        vw.className = 'work-video-embed';
+        vw.innerHTML = '<video src="assets/videos/ai/4.mp4" muted loop playsinline autoplay preload="metadata"></video>';
+        div.appendChild(vw);
+        /* 圆角 = 原尺寸 50px × 显示缩放比（显示宽度/1920） */
+        vw.style.borderRadius = Math.round(50 * div.getBoundingClientRect().width / 1920) + 'px';
+      }
+    }
+
+    function stop(n) {
+      var ld = document.getElementById('loading');
+      if (ld) ld.remove();
+      if (customInjected) { appendInteractive(); return; }
+      if (n === 1) {
+        works.innerHTML = '<div class="empty">把作品图片命名为 <strong>1.jpg、2.jpg、3.jpg…</strong>，放到<br><strong>assets/images/projects/p' + id + '/</strong> 文件夹即可自动平铺展示</div>';
+      }
+    }
+
+    function tryIndex(n) {
+      if (n > 60) { stop(n); return; }
+      trySrc(n, 'jpg');
+    }
+
+    function tryOne(src, cb) {
+      var img = new Image();
+      img.onload = function () { append(img); missStreak = 0; cb(true); };
+      img.onerror = function () { cb(false); };
+      img.src = src;
+    }
+
+    function trySrc(n, ext) {
+      var pad = (n < 10 ? '0' + n : String(n));
+      var tried = 0;
+      function next(ok) {
+        if (ok) { tryIndex(n + 1); return; }
+        tried++;
+        if (tried === 1) { tryOne(base + pad + '.' + ext, next); return; }
+        if (ext === 'jpg') { trySrc(n, 'png'); return; }
+        missStreak++;
+        if (missStreak >= 2) stop(n);
+        else tryIndex(n + 1);
+      }
+      tryOne(base + n + '.' + ext, next);
+    }
+
+    function buildInteractive() {
+      customInjected = true;
+      var div = document.createElement('div');
+      div.className = 'work work-interactive';
+      div.id = 'p2-interactive';
+      div.innerHTML =
+        '<div class="inter-stage">' +
+          '<button class="inter-arrow inter-arrow-left" type="button" aria-label="上一个"><img src="assets/images/projects/p2/箭头左.png" alt=""></button>' +
+          '<div class="inter-frame"><img class="inter-material" src="assets/images/projects/p2/inter-2.png" alt="素材 2"></div>' +
+          '<button class="inter-arrow inter-arrow-right" type="button" aria-label="下一个"><img src="assets/images/projects/p2/箭头右.png" alt=""></button>' +
+        '</div>';
+      wireInteractive(div);
+      return div;
+    }
+    function appendInteractive() {
+      if (interactiveAppended || inter02Inserted) return;
+      interactiveAppended = true;
+      works.appendChild(buildInteractive());   /* 兜底：02 互动模块（正常情况下已插到第 2 位） */
+    }
+
+    function wireInteractive(root) {
+      var mats = ['assets/images/projects/p2/inter-1.png', 'assets/images/projects/p2/inter-2.png'];
+      var img = root.querySelector('.inter-material');
+      var idx = 1; /* 默认先显示 inter-2 */
+      var autoTimer = null, hovering = false;
+      function switchTo(i) {
+        i = (i + mats.length) % mats.length;
+        if (i === idx) return;
+        idx = i;
+        img.classList.add('is-switching');
+        setTimeout(function () {
+          img.src = mats[idx];
+          img.onload = function () { img.classList.remove('is-switching'); };
+        }, 180);
+      }
+      function restartAuto() {
+        if (hovering) return;
+        if (autoTimer) clearInterval(autoTimer);
+        autoTimer = setInterval(function () { switchTo(idx + 1); }, 4000); /* 每 4 秒自动切换 */
+      }
+      function stopAuto() { if (autoTimer) { clearInterval(autoTimer); autoTimer = null; } }
+      root.querySelector('.inter-arrow-left').addEventListener('click', function () { switchTo(idx - 1); restartAuto(); });
+      root.querySelector('.inter-arrow-right').addEventListener('click', function () { switchTo(idx + 1); restartAuto(); });
+      var stage = root.querySelector('.inter-stage');
+      stage.addEventListener('mouseenter', function () { hovering = true; stopAuto(); });
+      stage.addEventListener('mouseleave', function () { hovering = false; restartAuto(); });
+      window.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft') { switchTo(idx - 1); restartAuto(); }
+        if (e.key === 'ArrowRight') { switchTo(idx + 1); restartAuto(); }
+      });
+      restartAuto();
+    }
+
+    function buildInteractive3() {
+      var div = document.createElement('div');
+      div.className = 'work work-interactive3';
+      div.id = 'p2-interactive3';
+      var vid = 'assets/images/projects/p2/03/撞车事故背景循环视频（路面静止版）.mp4';
+      div.innerHTML =
+        '<div class="inter3-stage">' +
+          '<video class="inter3-video" src="' + vid + '" muted loop playsinline autoplay preload="metadata"></video>' +
+          '<img class="inter3-top" src="assets/images/projects/p2/03/图1.png" alt="">' +
+          '<img class="inter3-mask inter3-mask-left" src="assets/images/projects/p2/03/遮罩左.png" alt="">' +
+          '<img class="inter3-mask inter3-mask-right" src="assets/images/projects/p2/03/遮罩右.png" alt="">' +
+          '<button class="inter3-arrow inter3-arrow-left" type="button" aria-label="上一个"><img src="assets/images/projects/p2/03/箭头.png" alt=""></button>' +
+          '<button class="inter3-arrow inter3-arrow-right" type="button" aria-label="下一个"><img src="assets/images/projects/p2/03/箭头 2.png" alt=""></button>' +
+          '<img class="inter3-switch" src="assets/images/projects/p2/03/切换.png" alt="">' +
+        '</div>';
+      wireInteractive3(div);
+      return div;
+    }
+
+    function wireInteractive3(root) {
+      /* 箭头切换 = 平移切换条（切换.png = 8 个名称段，4381px ÷ 8） */
+      var strip = root.querySelector('.inter3-switch');
+      var stageEl = root.querySelector('.inter3-stage');
+      var SEGMENTS = 8;
+      var cur = 0;
+      var stepPx = 0;
+      function calc() {
+        /* 起点：左端距左 106px(设计稿)；收尾：右端距右 106px(设计稿)，整体随模块缩放 */
+        var stageW = stageEl.getBoundingClientRect().width;
+        var stripW = strip.getBoundingClientRect().width;
+        var gap = stageW * (106 / 1920);
+        stepPx = (stripW - (stageW - gap * 2)) / (SEGMENTS - 1);
+      }
+      function go(i) {
+        cur = (i + SEGMENTS) % SEGMENTS;
+        calc();
+        strip.style.transition = 'transform 0.55s cubic-bezier(0.22,1,0.36,1)';
+        strip.style.transform = 'translateX(' + (-cur * stepPx).toFixed(1) + 'px)';
+      }
+      calc();
+      root.querySelector('.inter3-arrow-left').addEventListener('click', function () { go(cur - 1); });
+      root.querySelector('.inter3-arrow-right').addEventListener('click', function () { go(cur + 1); });
+      window.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft') go(cur - 1);
+        if (e.key === 'ArrowRight') go(cur + 1);
+      });
+      window.addEventListener('resize', function () { go(cur); });
+    }
+
+    function loadWorks(pid) {
+      id = pid;
+      base = 'assets/images/projects/p' + pid + '/';
+      document.title = (names[pid] || '项目详情') + ' | 吴季';
+      works.innerHTML = '<div class="loading" id="loading">作品加载中…</div>';
+      missStreak = 0;
+      if (pid === '2') { customInjected = true; } /* 02 互动模块在静态图加载完后自动插入 */
+
+      var coverVideo = document.createElement('video');
+      coverVideo.muted = true; coverVideo.loop = true; coverVideo.playsInline = true; coverVideo.autoplay = true;
+      coverVideo.src = 'assets/videos/projects/p' + pid + '.mp4';
+      var coverReady = false;
+      coverVideo.addEventListener('loadeddata', function () {
+        if (coverReady) return;
+        coverReady = true;
+        var ld = document.getElementById('loading');
+        if (ld) ld.remove();
+        var div = document.createElement('div');
+        div.className = 'work';
+        div.appendChild(coverVideo);
+        works.insertBefore(div, works.firstChild);
+      });
+      coverVideo.addEventListener('error', function () {});
+      tryIndex(1);
+    }
+
+    function setActive(pid) {
+      tabLinks.forEach(function (x) { x.classList.toggle('active', x.getAttribute('data-pid') === pid); });
+    }
+
+    /* 初始化 */
+    setActive(id);
+    positionThumb(false);
+    loadWorks(id);
+
+    /* Tab 点击：白色按钮滑动过去 + 无刷新切换 */
+    tabLinks.forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        e.preventDefault();
+        var pid = a.getAttribute('data-pid');
+        if (pid === id) return;
+        setActive(pid);
+        positionThumb(true);
+        loadWorks(pid);
+        try { history.pushState({ pid: pid }, '', 'project.html?id=' + pid); } catch (err) {}
+      });
+    });
+
+    /* 浏览器前进/后退 */
+    window.addEventListener('popstate', function () {
+      var p = new URLSearchParams(location.search);
+      var pid = p.get('id') || '1';
+      if (pid !== id) {
+        setActive(pid);
+        positionThumb(false);
+        loadWorks(pid);
+      }
+    });
+
+    window.addEventListener('resize', function () { positionThumb(false); });
+
+    /* 返回箭头：始终回到首页 index.html */
+    var backLink = document.getElementById('back-link');
+    if (backLink) {
+      backLink.addEventListener('click', function () {});
+    }
+  })();
+</script>
+</body>
+</html>
