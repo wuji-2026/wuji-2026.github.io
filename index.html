@@ -2077,7 +2077,7 @@
     var aiItems = aiNames.map(function (n) {
       var d = document.createElement('div');
       d.className = 'ai-video';
-      d.innerHTML = '<video src="assets/videos/ai/' + n + '.mp4" muted loop playsinline autoplay preload="metadata" onloadeddata="this.style.opacity=1" onerror="this.parentNode.classList.add(\'is-empty\')"></video>';
+      d.innerHTML = '<video data-src="assets/videos/ai/' + n + '.mp4" muted loop playsinline preload="none" onloadeddata="this.style.opacity=1" onerror="this.parentNode.classList.add(\'is-empty\')"></video>';
       aiTrack.appendChild(d);
       return d;
     });
@@ -2131,6 +2131,33 @@
     aiTrack.addEventListener('loadeddata', function () { aiSetPos(true); }, true);
     aiSetPos(true);
     aiRestart();
+
+    /* 懒加载：滚动到 AI 灵感区附近才开始下载/播放视频，避免首屏被多个大视频拖慢 */
+    var aiSectionEl = document.getElementById('ai');
+    function loadAiVideos() {
+      aiTrack.querySelectorAll('video').forEach(function (v) {
+        var ds = v.getAttribute('data-src');
+        if (ds && !v.getAttribute('src')) {
+          v.setAttribute('src', ds);
+          v.load();
+          var pr = v.play();
+          if (pr && pr.catch) pr.catch(function () {});
+        }
+      });
+    }
+    if (aiSectionEl && 'IntersectionObserver' in window) {
+      var aiObs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) {
+            loadAiVideos();
+            aiObs.disconnect();
+          }
+        });
+      }, { rootMargin: '300px' });
+      aiObs.observe(aiSectionEl);
+    } else {
+      loadAiVideos();
+    }
   }
 
   /* project cards 3D tilt + spotlight */
