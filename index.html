@@ -1320,10 +1320,10 @@
     introVideo.addEventListener('ended', hidePreloader);
     /* 视频出错（缺文件/不支持）马上进入 */
     introVideo.addEventListener('error', hidePreloader);
-    /* 视频开始播放后，按时长进入（超过 6 秒也最多 6 秒） */
+    /* 视频开始播放后：以"播完(ended)"为准进入；这里只做保险，按实际时长 +0.4s */
     introVideo.addEventListener('playing', function () {
-      var d = (introVideo.duration && isFinite(introVideo.duration)) ? introVideo.duration : 4;
-      setTimeout(hidePreloader, Math.min(d, 6) * 1000 + 300);
+      var d = (introVideo.duration && isFinite(introVideo.duration) && introVideo.duration > 0.5) ? introVideo.duration : 4;
+      setTimeout(hidePreloader, d * 1000 + 400);
     });
     var p = introVideo.play();
     if (p && p.catch) p.catch(function () {
@@ -1361,8 +1361,8 @@
       }
     });
   }
-  /* 绝对兜底：不管视频怎样，4 秒后一定进入，绝不让内容被遮挡 */
-  setTimeout(hidePreloader, 4000);
+  /* 宽松兜底：极端情况（视频卡住/不支持）最多 20 秒进入，正常播完即进入 */
+  setTimeout(hidePreloader, 20000);
 
   /* 项目卡片：点击时记录当前位置，返回时恢复 */
   var projectCards = $$('.project-card');
