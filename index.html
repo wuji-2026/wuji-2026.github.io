@@ -785,7 +785,7 @@
   .ai-nav { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; padding: 0 4px; }
   .ai-nav-btn {
     position: relative;
-    width: 44px; height: 44px;
+    width: 40px; height: 40px;
     padding: 0; border: none; background: transparent;
     display: inline-flex; align-items: center; justify-content: center;
     cursor: pointer;
@@ -2094,6 +2094,7 @@
     var aiTimer = null;
     var aiBusyTimer = null;
     var aiOffsets = [0];
+    var aiBase = 0; /* 初始与标题左对齐的基准（内容左边缘） */
     function aiGap() { return parseFloat(getComputedStyle(aiTrack).gap) || 18; }
     /* 缓存累计位移：点击时不读布局，减少卡顿 */
     function aiRebuild() {
@@ -2101,10 +2102,15 @@
       for (var k = 0; k < n; k++) { w += aiItems[k].getBoundingClientRect().width + aiGap(); arr.push(w); }
       aiOffsets = arr;
     }
+    function aiMeasureBase() {
+      var h = document.querySelector('#ai .section-header');
+      aiBase = h ? h.getBoundingClientRect().left : 0;
+    }
     function aiSetPos(instant) {
       var off = aiOffsets[Math.min(aiIndex, aiOffsets.length - 1)] || 0;
       aiTrack.style.transition = instant ? 'none' : '';
-      aiTrack.style.transform = 'translateX(' + (-off) + 'px)';
+      /* 初始贴齐标题左边缘；滑动仍全屏通栏：左出屏幕、右从屏幕外进 */
+      aiTrack.style.transform = 'translateX(' + (aiBase - off) + 'px)';
     }
     function aiReleaseBusy() { aiBusy = false; }
     function aiRestart() {
@@ -2145,10 +2151,11 @@
       aiWrap.addEventListener('mouseenter', function () { if (aiTimer) { clearInterval(aiTimer); aiTimer = null; } });
       aiWrap.addEventListener('mouseleave', aiRestart);
     }
-    function aiRefresh() { aiRebuild(); aiSetPos(true); }
+    function aiRefresh() { aiRebuild(); aiMeasureBase(); aiSetPos(true); }
     window.addEventListener('resize', aiRefresh);
     aiTrack.addEventListener('loadedmetadata', aiRefresh, true);
     aiTrack.addEventListener('loadeddata', aiRefresh, true);
+    aiMeasureBase();
     aiRebuild();
     aiSetPos(true);
     aiRestart();
