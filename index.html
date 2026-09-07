@@ -2118,6 +2118,7 @@
       clearTimeout(aiBusyTimer);
       aiBusyTimer = setTimeout(aiReleaseBusy, 600); /* 兜底：过渡被中断也能立刻响应下次点击 */
       aiSetPos(false);
+      aiEnsureManage();
       aiRestart();
     }
     function aiPrev() {
@@ -2128,6 +2129,7 @@
       clearTimeout(aiBusyTimer);
       aiBusyTimer = setTimeout(aiReleaseBusy, 600);
       aiSetPos(false);
+      aiEnsureManage();
       aiRestart();
     }
     aiTrack.addEventListener('transitionend', function (ev) {
@@ -2135,6 +2137,7 @@
       if (aiIndex >= aiItems.length) { aiIndex = 0; aiSetPos(true); }
       aiBusy = false;
       clearTimeout(aiBusyTimer);
+      aiEnsureManage();
     });
     $('#ai-next').addEventListener('click', aiNext);
     $('#ai-prev').addEventListener('click', aiPrev);
@@ -2150,32 +2153,51 @@
     aiSetPos(true);
     aiRestart();
 
-    /* 懒加载：滚动到 AI 灵感区附近才开始下载/播放视频，避免首屏被多个大视频拖慢 */
+    /* 移动端友好：只下载/播放靠近当前画面的 2-3 个视频，其余不下载、滑到附近才加载；
+       进入画面后暂停远处视频，避免一次性拉取全部（手机基本不加载的问题） */
     var aiSectionEl = document.getElementById('ai');
-    function loadAiVideos() {
-      aiTrack.querySelectorAll('video').forEach(function (v) {
+    var aiVideosInSection = false;
+    var N2 = aiItems.length * 2; /* 16 个 DOM 视频（8 真实 + 8 克隆） */
+    function aiDistance(i) {
+      var d = Math.abs(i - aiIndex);
+      if (d > N2 / 2) d = N2 - d;
+      return d;
+    }
+    function aiPlay(v) { var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+    function aiEnsure() {
+      /* 仅当 AI 区进入屏幕才加载；只给"当前视窗 ±2 张"设 src（其余零下载） */
+      if (!aiVideosInSection) return;
+      aiTrack.querySelectorAll('video').forEach(function (v, i) {
         var ds = v.getAttribute('data-src');
-        if (ds && !v.getAttribute('src')) {
+        if (!ds || v.getAttribute('src')) return;
+        if (aiDistance(i) <= 2) {
           v.setAttribute('src', ds);
           v.load();
-          var pr = v.play();
-          if (pr && pr.catch) pr.catch(function () {});
+          aiPlay(v);
         }
       });
     }
+    function aiManage() {
+      aiTrack.querySelectorAll('video').forEach(function (v, i) {
+        if (!v.getAttribute('src')) return;
+        if (aiVideosInSection && aiDistance(i) <= 2) aiPlay(v);
+        else { try { v.pause(); } catch (e) {} }
+      });
+    }
+    function aiEnsureManage() { aiEnsure(); aiManage(); }
     if (aiSectionEl && 'IntersectionObserver' in window) {
       var aiObs = new IntersectionObserver(function (entries) {
         entries.forEach(function (en) {
-          if (en.isIntersecting) {
-            loadAiVideos();
-            aiObs.disconnect();
-          }
+          aiVideosInSection = en.isIntersecting;
+          aiEnsureManage();
         });
-      }, { rootMargin: '300px' });
+      }, { rootMargin: '200px' });
       aiObs.observe(aiSectionEl);
     } else {
-      loadAiVideos();
+      aiVideosInSection = true;
+      aiEnsureManage();
     }
+    aiEnsureManage();
   }
 
   /* project cards 3D tilt + spotlight */
