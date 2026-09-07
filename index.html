@@ -556,7 +556,9 @@
   .project-card:hover .project-title { color: var(--accent-text); }
   .project-desc { font-size: 14px; line-height: 1.7; color: var(--text-secondary); margin-bottom: 20px; }
 
-  .project-footer { display: flex; align-items: center; justify-content: space-between; }
+  .project-  .footer-stats { text-align:center; width:100%; margin-top:14px; color:#71717a; font-size:12px; }
+  .footer-stats span { color:#8b8b94; }
+footer { display: flex; align-items: center; justify-content: space-between; }
   .project-tags { display: flex; gap: 7px; flex-wrap: wrap; }
   .project-tag {
     font-size: 11px; font-weight: 500; color: var(--text-muted);
@@ -1265,6 +1267,10 @@
     <a href="#resume">简历</a>
     <a href="#projects">项目</a>
     <a href="#contact">联系我</a>
+  </div>
+  <div class="footer-stats">
+    <span id="busuanzi_container_site_pv" style="display:none">本站总访问量 <span id="busuanzi_value_site_pv"></span> 次</span>
+    <span id="busuanzi_container_site_uv" style="display:none"> · 访客 <span id="busuanzi_value_site_uv"></span> 人</span>
   </div>
 </footer>
 
@@ -2281,5 +2287,6 @@
   window.addEventListener('resize', function () { checkReveals(); positionNavThumb(false); });
   setInterval(checkReveals, 700);
 })();</script>
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
 </body>
 </html>
