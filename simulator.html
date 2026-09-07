@@ -38,7 +38,7 @@
   main { max-width: 1200px; margin: 0 auto; padding: 20px 20px 90px; }
   .works { display: flex; flex-direction: column; gap: 15px; }
   .work { width: 100%; border-radius: 30px; overflow: hidden; background: transparent; }
-  .work img { display: block; width: 100%; height: auto; }
+  .work img.page-img { display: block; width: 100%; height: auto; }
   .loading { text-align: center; color: #71717a; font-size: 13px; padding: 60px 0; }
   footer { text-align: center; padding: 30px 20px 46px; color: #52525b; font-size: 12px; }
   @media (max-width: 600px) {
@@ -47,6 +47,39 @@
     .work { border-radius: 20px; }
     .works { gap: 10px; }
   }
+
+  /* ── 6.png 活体嵌入：安全驾驶互动模块 + 底部手机视频 ── */
+  .has-embed { position: relative; }
+  .m3-embed {
+    position: absolute; left: 32.29%; top: 14.47%; width: 62.40%;
+    aspect-ratio: 16 / 9;
+    border-radius: 7px; overflow: hidden; z-index: 2;
+    background: #000;
+  }
+  .m3-embed .m3-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .m3-embed .m3-top { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; pointer-events: none; z-index: 5; }
+  .m3-embed .m3-mask { position: absolute; top: 7.8%; width: 13.85%; height: 92%; pointer-events: none; z-index: 2; }
+  .m3-embed .m3-mask-left { left: 0; }
+  .m3-embed .m3-mask-right { right: 0; }
+  .m3-embed .m3-arrow {
+    position: absolute; bottom: 18.5%;
+    width: 2.6%; aspect-ratio: 5 / 8; min-width: 22px; max-width: 50px;
+    padding: 0; border: none; background: transparent; cursor: pointer;
+    opacity: 0.92; z-index: 4;
+  }
+  .m3-embed .m3-arrow img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .m3-embed .m3-arrow-left { left: 1.1%; }
+  .m3-embed .m3-arrow-right { right: 1.1%; }
+  .m3-embed .m3-switch {
+    position: absolute; bottom: 5.3%; left: 5.5%;
+    width: 228.2%; height: auto;
+    z-index: 1; pointer-events: none; will-change: transform;
+  }
+  .phone-video {
+    position: absolute; left: 38.54%; top: 84.30%; width: 22.87%; height: 11.85%;
+    border-radius: 0; overflow: hidden; z-index: 2; background: #000;
+  }
+  .phone-video video { width: 100%; height: 100%; object-fit: cover; display: block; }
 </style>
 </head>
 <body>
@@ -66,13 +99,23 @@
     var works = document.getElementById('works');
     var loading = document.getElementById('loading');
     var base = 'assets/images/projects/p3/';
+    var B3 = 'assets/images/projects/p3/03/';
+
     function append(img) {
       if (loading) loading.remove();
       var d = document.createElement('div');
       d.className = 'work';
+      img.className = 'page-img';
       img.style.display = 'block';
       d.appendChild(img);
       works.appendChild(d);
+      /* 6.png：嵌入安全驾驶互动模块 + 底部手机视频 */
+      var src = img.getAttribute('src') || '';
+      if (src.indexOf('/p3/6.png') !== -1) {
+        d.classList.add('has-embed');
+        embedM3(d);
+        embedPhone(d);
+      }
     }
     function stop() {
       if (loading) loading.remove();
@@ -80,6 +123,52 @@
         works.innerHTML = '<div style="text-align:center;color:#71717a;padding:60px 20px;line-height:2;">把图片命名为 <strong>1.png、2.png、3.png…</strong><br>放到 assets/images/projects/p3/ 即可自动展示</div>';
       }
     }
+
+    /* ── 安全驾驶互动模块（撞车事故视频 + 图1 + 遮罩 + 箭头/切换条） ── */
+    function embedM3(container) {
+      var m = document.createElement('div');
+      m.className = 'm3-embed';
+      m.innerHTML =
+        '<video class="m3-video" src="' + B3 + '撞车事故背景循环视频（路面静止版）.mp4" muted loop playsinline autoplay preload="metadata"></video>' +
+        '<img class="m3-top" src="' + B3 + '图1.png" alt="">' +
+        '<img class="m3-mask m3-mask-left" src="' + B3 + '遮罩左.png" alt="">' +
+        '<img class="m3-mask m3-mask-right" src="' + B3 + '遮罩右.png" alt="">' +
+        '<button class="m3-arrow m3-arrow-left" type="button" aria-label="上一个"><img src="' + B3 + '箭头.png" alt=""></button>' +
+        '<button class="m3-arrow m3-arrow-right" type="button" aria-label="下一个"><img src="' + B3 + '箭头 2.png" alt=""></button>' +
+        '<img class="m3-switch" src="' + B3 + '切换.png" alt="">';
+      container.appendChild(m);
+      /* 箭头平移切换条（8 段） */
+      var strip = m.querySelector('.m3-switch');
+      var stageEl = m;
+      var SEGMENTS = 8, cur = 0, stepPx = 0;
+      function calc() {
+        var stageW = stageEl.getBoundingClientRect().width;
+        var stripW = strip.getBoundingClientRect().width;
+        var gap = stageW * (106 / 1920);
+        stepPx = (stripW - (stageW - gap * 2)) / (SEGMENTS - 1);
+      }
+      function go(i) {
+        cur = (i + SEGMENTS) % SEGMENTS;
+        calc();
+        strip.style.transition = 'transform 0.55s cubic-bezier(0.22,1,0.36,1)';
+        strip.style.transform = 'translateX(' + (-cur * stepPx).toFixed(1) + 'px)';
+      }
+      m.querySelector('.m3-arrow-left').addEventListener('click', function () { go(cur - 1); });
+      m.querySelector('.m3-arrow-right').addEventListener('click', function () { go(cur + 1); });
+      window.addEventListener('resize', function () { go(cur); });
+      calc();
+    }
+
+    /* ── 底部手机：ai/4 视频 ── */
+    function embedPhone(container) {
+      var v = document.createElement('div');
+      v.className = 'phone-video';
+      v.innerHTML = '<video src="assets/videos/ai/4.mp4" muted loop playsinline autoplay preload="metadata"></video>';
+      container.appendChild(v);
+      /* 圆角 = 原设计 50px × 显示缩放比 */
+      v.style.borderRadius = Math.round(50 * container.getBoundingClientRect().width / 1920) + 'px';
+    }
+
     var miss = 0;
     function tryIndex(n) {
       if (n > 60) { stop(); return; }
