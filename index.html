@@ -747,7 +747,7 @@
     nav#navbar { top: 12px; width: calc(100% - 24px); padding: 5px; }
     nav#navbar.scrolled { width: calc(100% - 24px); }
     .nav-links a { font-size: 13px; padding: 8px 14px; gap: 6px; }
-    .hero { padding-top: 64px; padding-bottom: 40px; }
+    .hero { padding-top: 84px; padding-bottom: 40px; } /* 手机端：导航与下方徽标间距 +20px */
     .hero h1 .hero-name { font-size: 62px; }
     .hero h1 .hero-role { font-size: 22px; margin-top: 10px; }
     .hero-stats { grid-template-columns: repeat(3, 1fr); gap: 10px; }
@@ -768,7 +768,7 @@
 
 
   /* ── AI 灵感 ── */
-  .ai-section { position: relative; }
+  .ai-section { position: relative; padding-bottom: 24px; }
   .ai-marquee {
     width: 100vw;
     margin-left: calc(50% - 50vw); /* 通栏：铺满整个屏幕宽度，卡片从屏幕外滑入 */
@@ -778,31 +778,29 @@
   .ai-track {
     display: flex; gap: 18px; width: max-content;
     align-items: flex-start;
-    transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
     will-change: transform;
   }
   .ai-wrap { position: relative; }
   .ai-nav { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; padding: 0 4px; }
   .ai-nav-btn {
-    width: 38px; height: 38px;
-    border-radius: 50%;
-    border: 1px solid rgba(255,255,255,0.14);
-    -webkit-backdrop-filter: blur(14px);
-    backdrop-filter: blur(14px);
-    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    width: 44px; height: 44px;
+    padding: 0; border: none; background: transparent;
+    display: inline-flex; align-items: center; justify-content: center;
     cursor: pointer;
-    transition: background 0.25s, border-color 0.25s, transform 0.25s;
+    transition: transform 0.2s cubic-bezier(0.22,1,0.36,1);
+    -webkit-tap-highlight-color: transparent;
   }
-  .ai-nav-btn svg { width: 36px; height: 36px; display: block; }
-  #ai-prev { background: #3a3a40; border-color: rgba(255,255,255,0.12); color: #fff; }
-  #ai-next { background: #dcdce1; border-color: rgba(0,0,0,0.06); color: #16161a; }
-  .ai-nav-btn:hover { transform: scale(1.06); border-color: rgba(168,85,247,0.6); }
-  #ai-prev:hover { background: #45454c; }
-  #ai-next:hover { background: #ededf2; }
+  .ai-nav-btn img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .ai-nav-btn .arw-a { opacity: 0; }
+  .ai-nav-btn:active .arw-n { opacity: 0; }
+  .ai-nav-btn:active .arw-a { opacity: 1; }
+  .ai-nav-btn:hover { transform: scale(1.05); }
   .ai-nav-btn:active { transform: scale(0.92); }
   .ai-video {
     flex: 0 0 auto;
-    width: auto; height: 466px; /* 高度固定，宽度随视频原始比例 */
+    width: auto; height: 420px; /* 高度固定，宽度随视频原始比例 */
     border-radius: 16px;
     overflow: hidden;
     position: relative;
@@ -818,7 +816,7 @@
     z-index: 5;
   }
   @media (max-width: 768px) {
-    .ai-video { height: 302px; }
+    .ai-video { height: 272px; }
   }
   /* 高度固定、宽度自适应视频原始比例，完整展示不裁剪 */
   .ai-video video {
@@ -1216,10 +1214,12 @@
     </div>
     <div class="ai-nav">
       <button class="ai-nav-btn" id="ai-prev" aria-label="上一个">
-        <svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22.5 11.5L14 18l8.5 6.5"/></svg>
+        <img class="arw-n" src="箭头04.svg" alt="上一个">
+        <img class="arw-a" src="箭头03.svg" alt="">
       </button>
       <button class="ai-nav-btn" id="ai-next" aria-label="下一个">
-        <svg viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 11.5L22 18l-8.5 6.5"/></svg>
+        <img class="arw-n" src="箭头02.svg" alt="下一个">
+        <img class="arw-a" src="箭头01.svg" alt="">
       </button>
     </div>
   </div>
@@ -2092,16 +2092,21 @@
     var aiIndex = 0;
     var aiBusy = false;
     var aiTimer = null;
+    var aiBusyTimer = null;
+    var aiOffsets = [0];
     function aiGap() { return parseFloat(getComputedStyle(aiTrack).gap) || 18; }
-    function aiOffset(i) {
-      var w = 0;
-      for (var k = 0; k < i; k++) { w += aiItems[k % aiItems.length].getBoundingClientRect().width + aiGap(); }
-      return w;
+    /* 缓存累计位移：点击时不读布局，减少卡顿 */
+    function aiRebuild() {
+      var w = 0, arr = [0], n = aiItems.length;
+      for (var k = 0; k < n; k++) { w += aiItems[k].getBoundingClientRect().width + aiGap(); arr.push(w); }
+      aiOffsets = arr;
     }
     function aiSetPos(instant) {
+      var off = aiOffsets[Math.min(aiIndex, aiOffsets.length - 1)] || 0;
       aiTrack.style.transition = instant ? 'none' : '';
-      aiTrack.style.transform = 'translateX(' + (-aiOffset(aiIndex)) + 'px)';
+      aiTrack.style.transform = 'translateX(' + (-off) + 'px)';
     }
+    function aiReleaseBusy() { aiBusy = false; }
     function aiRestart() {
       if (aiTimer) { clearInterval(aiTimer); aiTimer = null; }
       if (!prefersReduced) aiTimer = setInterval(aiNext, 4000);
@@ -2110,6 +2115,8 @@
       if (aiBusy) return;
       aiIndex++;
       aiBusy = true;
+      clearTimeout(aiBusyTimer);
+      aiBusyTimer = setTimeout(aiReleaseBusy, 600); /* 兜底：过渡被中断也能立刻响应下次点击 */
       aiSetPos(false);
       aiRestart();
     }
@@ -2118,6 +2125,8 @@
       if (aiIndex === 0) { aiIndex = aiItems.length; aiSetPos(true); }
       aiIndex--;
       aiBusy = true;
+      clearTimeout(aiBusyTimer);
+      aiBusyTimer = setTimeout(aiReleaseBusy, 600);
       aiSetPos(false);
       aiRestart();
     }
@@ -2125,6 +2134,7 @@
       if (ev.target !== aiTrack || ev.propertyName !== 'transform') return;
       if (aiIndex >= aiItems.length) { aiIndex = 0; aiSetPos(true); }
       aiBusy = false;
+      clearTimeout(aiBusyTimer);
     });
     $('#ai-next').addEventListener('click', aiNext);
     $('#ai-prev').addEventListener('click', aiPrev);
@@ -2132,9 +2142,11 @@
       aiWrap.addEventListener('mouseenter', function () { if (aiTimer) { clearInterval(aiTimer); aiTimer = null; } });
       aiWrap.addEventListener('mouseleave', aiRestart);
     }
-    window.addEventListener('resize', function () { aiSetPos(true); });
-    aiTrack.addEventListener('loadedmetadata', function () { aiSetPos(true); }, true);
-    aiTrack.addEventListener('loadeddata', function () { aiSetPos(true); }, true);
+    function aiRefresh() { aiRebuild(); aiSetPos(true); }
+    window.addEventListener('resize', aiRefresh);
+    aiTrack.addEventListener('loadedmetadata', aiRefresh, true);
+    aiTrack.addEventListener('loadeddata', aiRefresh, true);
+    aiRebuild();
     aiSetPos(true);
     aiRestart();
 
