@@ -757,6 +757,8 @@
 
     .projects-grid { grid-template-columns: 1fr; }
     section { padding: 40px 22px; } /* 手机端：缩小模块间间距 */
+    .ai-section { display: none; } /* 手机端隐藏 AI 灵感，加快加载 */
+    .nav-links a[href="#ai"] { display: none; }
     .timeline-scroll { max-height: none; overflow-y: visible; padding-right: 0; }
     footer { padding: 32px 22px; flex-direction: column; align-items: flex-start; }
     .scroll-hint { display: none; }
@@ -892,7 +894,7 @@
 <body>
 
 <div id="preloader">
-  <video id="intro-video" playsinline preload="auto">
+  <video id="intro-video" autoplay playsinline preload="auto">
     <source src="assets/videos/intro.mp4" type="video/mp4">
   </video>
   <button class="intro-sound-btn" id="intro-sound-btn" type="button" aria-label="开启声音">
