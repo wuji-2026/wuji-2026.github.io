@@ -53,46 +53,209 @@
     z-index: 999;
   }
 
-  /* ── 预加载：入场视频（播完自动进入） ── */
+  /* ── 入场海报 ── */
+  body.entry-lock { overflow: hidden; }
   #preloader {
     position: fixed; inset: 0; z-index: 1000;
+    overflow: hidden;
     background: #050506;
-    display: flex; align-items: center; justify-content: center;
-    transition: opacity 0.8s ease, visibility 0.8s ease;
+    opacity: 1; visibility: visible;
+    transition: opacity 0.58s ease, visibility 0.58s ease;
   }
-  #preloader.hide { opacity: 0; visibility: hidden; }
-  #preloader video {
+  #preloader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+
+  .entry-mobile-video {
+    position: absolute; inset: 0; z-index: 2;
     width: 100%; height: 100%;
-    object-fit: cover;
-    display: block;
+    display: none; object-fit: cover;
     background: #050506;
   }
-
-
-  .intro-sound-btn {
-    position: absolute; right: 20px; bottom: 20px; z-index: 2;
-    display: none; align-items: center; justify-content: center;
-    width: 46px; height: 46px;
+  .entry-poster {
+    position: absolute; inset: -1px;
+    overflow: hidden;
+    transform-origin: 100% 50%;
+    will-change: transform, opacity;
+  }
+  .entry-poster__image {
+    position: absolute; inset: -2%;
+    width: 104%; height: 104%;
+    object-fit: cover; object-position: center;
+    display: block;
+    transform: scale(1.02) translate3d(var(--tilt-x, 0px), var(--tilt-y, 0px), 0);
+    transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+    user-select: none; -webkit-user-drag: none;
+    pointer-events: none;
+  }
+  .entry-poster__canvas {
+    position: absolute; inset: 0; z-index: 1;
+    width: 100%; height: 100%;
+    display: block; pointer-events: none;
+    opacity: 0; transition: opacity 0.35s ease;
+  }
+  .entry-poster__canvas.is-ready { opacity: 1; }
+  .entry-poster.has-ripple-canvas .entry-ripples { opacity: 0 !important; }
+  .entry-ripples {
+    position: absolute; inset: 0; z-index: 2;
+    opacity: 0; pointer-events: none;
+    mix-blend-mode: screen;
+    transition: opacity 0.35s ease;
+  }
+  .entry-poster.is-rippling .entry-ripples { opacity: 0.95; }
+  .entry-ripples::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%),
+      rgba(255,255,255,0.20) 0%,
+      rgba(255,255,255,0.08) 16%,
+      rgba(255,255,255,0.025) 29%,
+      transparent 45%);
+    filter: blur(9px);
+  }
+  .entry-ripples span {
+    position: absolute;
+    left: var(--ripple-x, 50%); top: var(--ripple-y, 50%);
+    width: clamp(150px, 18vw, 300px); aspect-ratio: 1;
     border-radius: 50%;
-    color: #ffffff;
-    background: rgba(10,10,14,0.55);
-    border: 1px solid rgba(255,255,255,0.3);
-    cursor: pointer;
-    transition: background 0.25s, transform 0.15s, border-color 0.25s;
-    animation: sound-pulse 2s ease-in-out infinite;
+    border: 1px solid rgba(255,255,255,0.42);
+    box-shadow:
+      0 0 20px rgba(255,255,255,0.10),
+      inset 0 0 22px rgba(255,255,255,0.08);
+    transform: translate(-50%, -50%) scale(0.18);
+    opacity: 0;
+    animation: entry-ripple 1.75s cubic-bezier(0.22, 1, 0.36, 1) infinite;
   }
-  .intro-sound-btn:hover { background: rgba(168,85,247,0.55); border-color: rgba(255,255,255,0.5); transform: scale(1.06); }
-  .intro-sound-btn:active { transform: scale(0.95); }
-  .intro-sound-btn svg { display: block; }
-  .intro-sound-btn .ico-on { display: none; }
-  .intro-sound-btn.is-on .ico-on { display: block; }
-  .intro-sound-btn.is-on .ico-off { display: none; }
-  .intro-sound-btn.is-on { animation: none; }
-  @keyframes sound-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(168,85,247,0.4); }
-    50% { box-shadow: 0 0 0 12px rgba(168,85,247,0); }
+  .entry-ripples span:nth-child(2) { width: clamp(180px, 22vw, 360px); animation-delay: -0.58s; }
+  .entry-ripples span:nth-child(3) { width: clamp(210px, 26vw, 420px); animation-delay: -1.16s; }
+  @keyframes entry-ripple {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.18); }
+    18% { opacity: 0.72; }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.65); }
   }
-  #preloader.show-sound-btn .intro-sound-btn { display: inline-flex; }
+  .entry-vignette {
+    position: absolute; inset: 0; z-index: 3;
+    background:
+      linear-gradient(to bottom, rgba(0,0,0,0.16), transparent 26%, transparent 62%, rgba(0,0,0,0.48)),
+      radial-gradient(ellipse at center, transparent 38%, rgba(0,0,0,0.26) 100%);
+    pointer-events: none;
+  }
+
+  .entry-cinema-light {
+    position: absolute; inset: 0; z-index: 5;
+    pointer-events: none; overflow: hidden;
+    mix-blend-mode: screen;
+  }
+  .entry-cinema-light__flare {
+    position: absolute; left: 3.5%; bottom: 26%;
+    width: clamp(165px, 22vw, 350px); aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+      rgba(255,248,190,0.88) 0%,
+      rgba(255,222,91,0.54) 18%,
+      rgba(255,190,35,0.20) 42%,
+      rgba(255,168,20,0.055) 61%,
+      transparent 76%);
+    filter: blur(18px) saturate(1.08);
+    transform-origin: 50% 50%;
+    animation: cinema-flicker 2.35s ease-in-out infinite;
+  }
+  .entry-cinema-light__beam {
+    position: absolute; left: 4.5%; bottom: 27%;
+    width: clamp(430px, 68vw, 1060px); height: clamp(215px, 36vh, 420px);
+    transform-origin: 0 100%;
+    background: radial-gradient(ellipse at 0% 100%,
+      rgba(255,246,168,0.34) 0%,
+      rgba(255,224,78,0.17) 34%,
+      rgba(255,203,33,0.065) 57%,
+      transparent 78%);
+    clip-path: polygon(0 79%, 15% 73%, 100% 2%, 100% 17%, 25% 100%, 0 100%);
+    filter: blur(17px) saturate(1.05);
+    opacity: 0.38;
+    -webkit-mask-image: linear-gradient(90deg, #000 0%, rgba(0,0,0,0.78) 38%, rgba(0,0,0,0.28) 70%, transparent 100%);
+    mask-image: linear-gradient(90deg, #000 0%, rgba(0,0,0,0.78) 38%, rgba(0,0,0,0.28) 70%, transparent 100%);
+    animation: cinema-beam 3.6s ease-in-out infinite;
+  }
+  .entry-cinema-light__spark {
+    position: absolute; left: 4.2%; bottom: 29%;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: #fff7b0;
+    filter: blur(0.6px);
+    box-shadow: 0 0 16px 6px rgba(255,222,71,0.72), 0 0 48px 19px rgba(255,194,28,0.22);
+    animation: cinema-spark 1.8s ease-in-out infinite;
+  }
+  @keyframes cinema-flicker {
+    0%, 100% { opacity: 0.68; transform: scale(0.94) translate3d(0, 2px, 0); }
+    10% { opacity: 0.92; transform: scale(1.04) translate3d(2px, -2px, 0); }
+    18% { opacity: 0.61; transform: scale(0.97) translate3d(-1px, 1px, 0); }
+    31% { opacity: 0.88; transform: scale(1.08) translate3d(3px, -3px, 0); }
+    47% { opacity: 0.73; transform: scale(0.98) translate3d(-2px, 2px, 0); }
+    63% { opacity: 0.96; transform: scale(1.1) translate3d(4px, -2px, 0); }
+    78% { opacity: 0.66; transform: scale(0.96) translate3d(-1px, 1px, 0); }
+  }
+  @keyframes cinema-beam {
+    0%, 100% { opacity: 0.28; transform: rotate(-0.8deg) scaleX(0.98); }
+    50% { opacity: 0.48; transform: rotate(0.65deg) scaleX(1.03); }
+  }
+  @keyframes cinema-spark {
+    0%, 100% { opacity: 0.55; transform: scale(0.75); }
+    45% { opacity: 1; transform: scale(1.35); }
+  }
+  .entry-cue {
+    position: absolute; left: 50%; bottom: clamp(26px, 5vh, 58px); z-index: 6;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: #ffffff; text-align: center; pointer-events: none;
+    opacity: 0; transform: translate(-50%, 30px);
+    animation: entry-cue-in 1s cubic-bezier(0.22, 1, 0.36, 1) 0.45s forwards;
+    transition: opacity 0.35s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .entry-mouse {
+    width: 22px; height: 34px;
+    display: flex; justify-content: center; padding-top: 5px;
+    border: 1.5px solid rgba(255,255,255,0.78);
+    border-radius: 999px;
+    background: rgba(7,7,10,0.20);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.28), 0 8px 24px rgba(0,0,0,0.24);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .entry-mouse span {
+    width: 2px; height: 7px; border-radius: 999px;
+    background: #ffffff;
+    box-shadow: 0 0 10px rgba(255,255,255,0.72);
+    animation: entry-wheel 1.55s ease-in-out infinite;
+  }
+  .entry-copy { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .entry-copy span {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.28em; text-transform: uppercase;
+    color: rgba(255,255,255,0.68);
+  }
+  @keyframes entry-cue-in {
+    from { opacity: 0; transform: translate(-50%, 30px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+  }
+  @keyframes entry-wheel {
+    0% { transform: translateY(0); opacity: 1; }
+    68% { transform: translateY(8px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 0; }
+  }
+  #preloader.is-scrolling .entry-cue,
+  #preloader.entering .entry-cue {
+    animation: none;
+    opacity: 0;
+    transform: translate(-50%, 36px);
+  }
+  .entry-poster:hover .entry-mouse {
+    border-color: rgba(255,255,255,0.96);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 0 0 8px rgba(255,255,255,0.05), 0 10px 28px rgba(0,0,0,0.3);
+  }
+  @media (max-width: 768px) {
+    .entry-poster { display: none; }
+    .entry-mobile-video { display: block; }
+    .entry-cue { bottom: 28px; gap: 7px; }
+    .entry-mouse { width: 20px; height: 31px; padding-top: 4px; }
+    .entry-cinema-light__flare { left: 3%; bottom: 27%; width: 160px; }
+    .entry-cinema-light__beam { left: 4%; bottom: 28%; width: 430px; height: 230px; }
+    .entry-cinema-light__spark { left: 3.8%; bottom: 30%; }
+  }
   /* ── 导航（参考 oscarhernandez.vercel.app · 居中胶囊 + 圆点指示 + 毛玻璃） ── */
   nav#navbar {
     position: fixed; top: 18px; left: 50%;
@@ -528,17 +691,6 @@
   .project-thumb video.v-on { opacity: 1; }
   .project-card:hover .project-thumb video { transform: scale(1.09); filter: saturate(1.08) contrast(1.04); }
 
-  .project-thumb .thumb-tag {
-    position: absolute; top: 14px; left: 14px; z-index: 2;
-    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
-    color: #ffffff; background: var(--accent);
-    border-radius: 6px; padding: 3px 9px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
-    transform: translateY(-4px); opacity: 0;
-    transition: transform 0.4s var(--ease), opacity 0.4s;
-  }
-  .project-card:hover .thumb-tag { transform: translateY(0); opacity: 1; }
-
   .project-body { padding: 24px 26px; }
   .project-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
   .project-type {
@@ -556,7 +708,12 @@
   .project-card:hover .project-title { color: var(--accent-text); }
   .project-desc { font-size: 14px; line-height: 1.7; color: var(--text-secondary); margin-bottom: 20px; }
 
-  .project-  .footer-stats { text-align:center; width:100%; margin-top:14px; color:#71717a; font-size:12px; }
+  .project-footer {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 18px; margin-top: 0;
+  }
+  .project-footer .project-tags { align-items: flex-end; }
+  .footer-stats { text-align:center; width:100%; margin-top:14px; color:#71717a; font-size:12px; }
   .footer-stats span { color:#8b8b94; }
 footer { display: flex; align-items: center; justify-content: space-between; }
   .project-tags { display: flex; gap: 7px; flex-wrap: wrap; }
@@ -895,22 +1052,29 @@ footer { display: flex; align-items: center; justify-content: space-between; }
 </head>
 <body>
 
-<div id="preloader">
-  <video id="intro-video" autoplay playsinline preload="auto">
+<div id="preloader" aria-label="进入网站">
+  <video class="entry-mobile-video" id="mobile-intro-video" muted playsinline preload="auto" aria-hidden="true">
     <source src="assets/videos/intro.mp4" type="video/mp4">
   </video>
-  <button class="intro-sound-btn" id="intro-sound-btn" type="button" aria-label="开启声音">
-    <svg class="ico-off" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"/>
-      <line x1="23" y1="9" x2="17" y2="15"/>
-      <line x1="17" y1="9" x2="23" y2="15"/>
-    </svg>
-    <svg class="ico-on" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"/>
-      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-      <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-    </svg>
-  </button>
+  <div class="entry-poster" id="entry-poster">
+    <img class="entry-poster__image" id="entry-poster-image" src="assets/videos/进入封面.png" alt="进入封面">
+    <canvas class="entry-poster__canvas" id="entry-poster-canvas" aria-hidden="true"></canvas>
+    <div class="entry-ripples" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+    <div class="entry-vignette" aria-hidden="true"></div>
+    <div class="entry-cinema-light" aria-hidden="true">
+      <span class="entry-cinema-light__beam"></span>
+      <span class="entry-cinema-light__flare"></span>
+      <span class="entry-cinema-light__spark"></span>
+    </div>
+    <div class="entry-cue" aria-hidden="true">
+      <div class="entry-mouse"><span></span></div>
+      <div class="entry-copy">
+        <span>向下滑动</span>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="scroll-progress"></div>
@@ -1116,7 +1280,6 @@ footer { display: flex; align-items: center; justify-content: space-between; }
 
     <a href="project.html?id=1" class="project-card reveal d1">
       <div class="project-thumb">
-        <span class="thumb-tag">最新</span>
         <video src="assets/videos/projects/p1.mp4" muted playsinline autoplay preload="metadata" onloadeddata="this.classList.add('v-on')"></video>
       </div>
       <div class="project-body">
@@ -1137,7 +1300,6 @@ footer { display: flex; align-items: center; justify-content: space-between; }
 
     <a href="project.html?id=2" class="project-card reveal d2">
       <div class="project-thumb">
-        <span class="thumb-tag">代表作</span>
         <img src="assets/images/covers/p2-cover.png" alt="驾考宝典" loading="lazy">
       </div>
       <div class="project-body">
@@ -1157,7 +1319,6 @@ footer { display: flex; align-items: center; justify-content: space-between; }
 
     <a href="simulator.html" class="project-card reveal d3">
       <div class="project-thumb">
-        <span class="thumb-tag">硬件终端</span>
         <img src="assets/images/covers/p3-cover.png" alt="智能模拟器" loading="lazy">
       </div>
       <div class="project-body">
@@ -1178,7 +1339,6 @@ footer { display: flex; align-items: center; justify-content: space-between; }
 
     <a href="project.html?id=4" class="project-card reveal d4">
       <div class="project-thumb">
-        <span class="thumb-tag">门店 VI</span>
         <img src="assets/images/covers/p4-cover.png" alt="智慧驾校门店VI" loading="lazy">
       </div>
       <div class="project-body">
@@ -1191,6 +1351,25 @@ footer { display: flex; align-items: center; justify-content: space-between; }
           <div class="project-tags">
             <span class="project-tag">品牌 VI</span>
             <span class="project-tag">线下物料</span>
+          </div>
+          <div class="project-arrow">→</div>
+        </div>
+      </div>
+    </a>
+
+    <a href="project.html?id=5" class="project-card reveal d5">
+      <div class="project-thumb">
+        <img src="assets/images/covers/p5-cover.jpg" alt="智慧驾校大屏" loading="lazy">
+      </div>
+      <div class="project-body">
+        <div class="project-meta">
+          <span class="project-type">数据可视化</span>
+        </div>
+        <div class="project-title">智慧驾校大屏</div>
+        <div class="project-desc">定制智慧驾培一体化数据监控大屏，驾培教学标准化、管理数字化。</div>
+        <div class="project-footer">
+          <div class="project-tags">
+            <span class="project-tag">可视化大屏</span>
           </div>
           <div class="project-arrow">→</div>
         </div>
@@ -1295,79 +1474,327 @@ footer { display: flex; align-items: center; justify-content: space-between; }
   function $(s, c) { return (c || document).querySelector(s); }
   function $$(s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); }
 
-  /* 从项目详情页返回：恢复原位置并跳过入场视频 */
+  /* 从项目详情页返回：恢复原位置并跳过入场海报 */
   var portfolioReturn = null;
   try { portfolioReturn = sessionStorage.getItem('portfolioScroll'); } catch (e) {}
 
-  /* 入场视频：播完自动进入（无论视频是否正常，最多 4 秒必定进入） */
+  /* 入场海报：滚动向右放大并同步淡化进入网站 */
   var preloaderEl = document.getElementById('preloader');
-  var introVideo = document.getElementById('intro-video');
+  var entryPoster = document.getElementById('entry-poster');
+  var mobileIntroVideo = document.getElementById('mobile-intro-video');
+  var useMobileVideo = false;
+  try { useMobileVideo = window.matchMedia && window.matchMedia('(max-width: 768px)').matches; } catch (e) {}
+  var entryProgress = 0;
+  var entryTarget = 0;
+  var entryRendering = false;
+  var entryFinished = false;
+  var entryTouchY = null;
   var skipIntro = false;
   try { if (localStorage.getItem('skipIntro') === '1') skipIntro = true; } catch (e) {}
   try { if (/[?&]back=1/.test(location.search)) skipIntro = true; } catch (e) {}
-  if (portfolioReturn !== null || skipIntro) {
-    /* 返回时不播视频，直接显示页面（彻底移除视频，避免出声） */
-    if (preloaderEl) preloaderEl.classList.add('hide');
-    if (introVideo) {
-      try { introVideo.pause(); } catch (e) {}
-      try { introVideo.remove(); } catch (e) {}
-    }
-    introVideo = null;
-    try { localStorage.removeItem('skipIntro'); } catch (e) {}
+  var skipEntry = portfolioReturn !== null || skipIntro;
+
+  document.body.classList.add('entry-lock');
+
+  function unlockEntryScroll() {
+    document.body.classList.remove('entry-lock');
   }
-  function hidePreloader() {
-    if (!preloaderEl || preloaderEl.classList.contains('hide')) return;
-    preloaderEl.classList.add('hide');
-    if (introVideo && introVideo.pause) { try { introVideo.pause(); } catch (e) {} }
+
+  function applyEntryProgress(value) {
+    if (!entryPoster) return;
+    var p = Math.max(0, Math.min(1, value));
+    var translateX = p * 18;
+    var translateY = p * -4;
+    var scale = 1 + p * 0.72;
+    entryPoster.style.transform = 'translate3d(' + translateX.toFixed(3) + 'vw, ' + translateY.toFixed(3) + 'vh, 0) scale(' + scale.toFixed(4) + ')';
+    entryPoster.style.opacity = String(1 - Math.max(0, (p - 0.78) / 0.22) * 0.12);
+    if (preloaderEl) preloaderEl.classList.toggle('is-scrolling', p > 0.08);
   }
-  if (introVideo) {
-    /* 视频播完自动进入 */
-    introVideo.addEventListener('ended', hidePreloader);
-    /* 视频出错（缺文件/不支持）马上进入 */
-    introVideo.addEventListener('error', hidePreloader);
-    /* 视频开始播放后：以"播完(ended)"为准进入；这里只做保险，按实际时长 +0.4s */
-    introVideo.addEventListener('playing', function () {
-      var d = (introVideo.duration && isFinite(introVideo.duration) && introVideo.duration > 0.5) ? introVideo.duration : 4;
-      setTimeout(hidePreloader, d * 1000 + 400);
+
+  function beginEntryFade() {
+    if (entryFinished || skipEntry) return;
+    entryFinished = true;
+    if (preloaderEl) preloaderEl.classList.add('entering');
+    raf(function () {
+      if (preloaderEl) preloaderEl.classList.add('hide');
+      unlockEntryScroll();
     });
-    var p = introVideo.play();
-    if (p && p.catch) p.catch(function () {
-      /* 浏览器拦截带声音的自动播放：降级为静音播放，并提供一键开声音 */
-      introVideo.muted = true;
-      var p2 = introVideo.play();
-      if (p2 && p2.catch) p2.catch(function () { setTimeout(hidePreloader, 1500); });
-      var soundBtn = document.getElementById('intro-sound-btn');
-      var pre = document.getElementById('preloader');
-      if (soundBtn && pre) {
-        pre.classList.add('show-sound-btn');
-        function turnOnSound() {
-          if (!introVideo.muted) return;
-          introVideo.muted = false;
-          introVideo.volume = 1;
-          var p3 = introVideo.play();
-          if (p3 && p3.catch) p3.catch(function () {});
-          soundBtn.classList.add('is-on');
-        }
-        soundBtn.addEventListener('click', turnOnSound);
-        /* 播放期间点击/触碰页面任意位置，声音立即打开 */
-        pre.addEventListener('click', turnOnSound);
-        document.addEventListener('pointerdown', function once() {
-          if (!preloaderEl.classList.contains('hide')) {
-            turnOnSound();
-            document.removeEventListener('pointerdown', once);
-          }
-        });
-        document.addEventListener('keydown', function onceKey() {
-          if (!preloaderEl.classList.contains('hide')) {
-            turnOnSound();
-            document.removeEventListener('keydown', onceKey);
-          }
-        });
+  }
+
+  function renderEntry() {
+    entryRendering = false;
+    var diff = entryTarget - entryProgress;
+    if (Math.abs(diff) < 0.0015) {
+      entryProgress = entryTarget;
+      applyEntryProgress(entryProgress);
+      return;
+    }
+    entryProgress += diff * 0.13;
+    applyEntryProgress(entryProgress);
+    entryRendering = true;
+    raf(renderEntry);
+  }
+
+  function kickEntry() {
+    if (entryRendering || entryFinished || skipEntry) return;
+    entryRendering = true;
+    raf(renderEntry);
+  }
+
+  function addEntryDelta(delta) {
+    if (entryFinished || skipEntry || delta <= 0) return;
+    var step = Math.min(0.14, delta * 0.0016);
+    entryTarget = Math.max(0, Math.min(1, entryTarget + step));
+    kickEntry();
+    if (entryTarget >= 1) beginEntryFade();
+  }
+
+  function onEntryWheel(e) {
+    if (entryFinished || skipEntry) return;
+    e.preventDefault();
+    addEntryDelta(e.deltaMode === 1 ? e.deltaY * 18 : e.deltaY);
+  }
+
+  function onEntryTouchStart(e) {
+    entryTouchY = e.touches && e.touches.length ? e.touches[0].clientY : null;
+  }
+
+  function onEntryTouchMove(e) {
+    if (entryTouchY === null || !e.touches || !e.touches.length) return;
+    e.preventDefault();
+    var y = e.touches[0].clientY;
+    var delta = entryTouchY - y;
+    entryTouchY = y;
+    addEntryDelta(Math.max(0, delta) * 2.2);
+  }
+
+  if (skipEntry) {
+    if (preloaderEl) preloaderEl.classList.add('hide');
+    if (mobileIntroVideo) { try { mobileIntroVideo.pause(); } catch (e) {} }
+    entryFinished = true;
+    unlockEntryScroll();
+    try { localStorage.removeItem('skipIntro'); } catch (e) {}
+  } else if (useMobileVideo && mobileIntroVideo) {
+    /* 手机端：播放视频，播完或失败后同步淡化进入首页 */
+    applyEntryProgress(1);
+    var mobileVideoFinished = false;
+    function enterFromMobileVideo() {
+      if (mobileVideoFinished) return;
+      mobileVideoFinished = true;
+      try { mobileIntroVideo.pause(); } catch (e) {}
+      beginEntryFade();
+    }
+    mobileIntroVideo.addEventListener('ended', enterFromMobileVideo);
+    mobileIntroVideo.addEventListener('error', enterFromMobileVideo);
+    mobileIntroVideo.addEventListener('loadedmetadata', function () {
+      if (mobileIntroVideo.duration && isFinite(mobileIntroVideo.duration) && mobileIntroVideo.duration > 0.5) {
+        setTimeout(enterFromMobileVideo, mobileIntroVideo.duration * 1000 + 180);
+      }
+    });
+    var mobilePlay = mobileIntroVideo.play();
+    if (mobilePlay && mobilePlay.catch) {
+      mobilePlay.catch(function () {
+        mobileIntroVideo.muted = true;
+        var retryPlay = mobileIntroVideo.play();
+        if (retryPlay && retryPlay.catch) retryPlay.catch(function () { setTimeout(enterFromMobileVideo, 1200); });
+      });
+    }
+    setTimeout(enterFromMobileVideo, 12000);
+  } else {
+    applyEntryProgress(0);
+    window.addEventListener('wheel', onEntryWheel, { passive: false });
+    window.addEventListener('touchstart', onEntryTouchStart, { passive: true });
+    window.addEventListener('touchmove', onEntryTouchMove, { passive: false });
+    window.addEventListener('touchend', function () { entryTouchY = null; }, { passive: true });
+    window.addEventListener('keydown', function (e) {
+      if (entryFinished) return;
+      if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+        e.preventDefault();
+        addEntryDelta(220);
       }
     });
   }
-  /* 宽松兜底：极端情况（视频卡住/不支持）最多 20 秒进入，正常播完即进入 */
-  setTimeout(hidePreloader, 20000);
+
+  var rippleCanvas = document.getElementById('entry-poster-canvas');
+  var entryPosterImage = document.getElementById('entry-poster-image');
+  var rippleState = { initialized: false, running: false, hover: 0, mouseX: 0.5, mouseY: 0.5, time: 0 };
+
+  function initRippleDistortion() {
+    if (!rippleCanvas || !entryPosterImage || rippleState.initialized) return;
+    var gl = rippleCanvas.getContext('webgl', { alpha: false, antialias: false, premultipliedAlpha: false });
+    if (!gl) return;
+
+    var vert = [
+      'attribute vec2 aPosition;',
+      'varying vec2 vUv;',
+      'void main() {',
+      '  vUv = aPosition * 0.5 + 0.5;',
+      '  gl_Position = vec4(aPosition, 0.0, 1.0);',
+      '}'
+    ].join('\n');
+
+    var frag = [
+      'precision highp float;',
+      'uniform sampler2D uTexture;',
+      'uniform vec2 uResolution;',
+      'uniform vec2 uImageResolution;',
+      'uniform vec2 uMouse;',
+      'uniform float uTime;',
+      'uniform float uStrength;',
+      'uniform float uSwirl;',
+      'uniform float uRings;',
+      'uniform float uBrush;',
+      'uniform float uHover;',
+      'varying vec2 vUv;',
+      'vec2 coverUv(vec2 uv) {',
+      '  float canvasAspect = uResolution.x / uResolution.y;',
+      '  float imageAspect = uImageResolution.x / uImageResolution.y;',
+      '  vec2 scale = canvasAspect > imageAspect',
+      '    ? vec2(1.0, imageAspect / canvasAspect)',
+      '    : vec2(canvasAspect / imageAspect, 1.0);',
+      '  return (uv - 0.5) * scale + 0.5;',
+      '}',
+      'void main() {',
+      '  vec2 delta = vUv - uMouse;',
+      '  float aspect = uResolution.x / uResolution.y;',
+      '  float dist = length(delta * vec2(aspect, 1.0));',
+      '  float radius = uBrush / min(uResolution.x, uResolution.y);',
+      '  float influence = smoothstep(radius, 0.0, dist) * uHover;',
+      '  float phase = dist * (uRings * 28.0) - uTime * 2.8;',
+      '  float wave = sin(phase);',
+      '  float secondary = cos(phase * 0.67 + 1.7);',
+      '  vec2 direction = delta / max(length(delta), 0.0001);',
+      '  vec2 tangent = vec2(-direction.y, direction.x);',
+      '  float ripple = (wave + secondary * 0.34) * influence;',
+      '  vec2 imageUv = coverUv(vUv);',
+      '  vec2 offset = direction * ripple * uStrength * 0.075;',
+      '  offset += tangent * ripple * uSwirl * influence * 0.018;',
+      '  vec3 color = texture2D(uTexture, clamp(imageUv + offset, 0.001, 0.999)).rgb;',
+      '  color += max(wave, 0.0) * influence * 0.055;',
+      '  gl_FragColor = vec4(color, 1.0);',
+      '}'
+    ].join('\n');
+
+    function compile(type, source) {
+      var shader = gl.createShader(type);
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        gl.deleteShader(shader);
+        return null;
+      }
+      return shader;
+    }
+
+    var vs = compile(gl.VERTEX_SHADER, vert);
+    var fs = compile(gl.FRAGMENT_SHADER, frag);
+    if (!vs || !fs) return;
+    var program = gl.createProgram();
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
+    gl.useProgram(program);
+
+    var buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+    var position = gl.getAttribLocation(program, 'aPosition');
+    gl.enableVertexAttribArray(position);
+    gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+
+    var texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, entryPosterImage);
+
+    var uniforms = {
+      resolution: gl.getUniformLocation(program, 'uResolution'),
+      imageResolution: gl.getUniformLocation(program, 'uImageResolution'),
+      mouse: gl.getUniformLocation(program, 'uMouse'),
+      time: gl.getUniformLocation(program, 'uTime'),
+      strength: gl.getUniformLocation(program, 'uStrength'),
+      swirl: gl.getUniformLocation(program, 'uSwirl'),
+      rings: gl.getUniformLocation(program, 'uRings'),
+      brush: gl.getUniformLocation(program, 'uBrush'),
+      hover: gl.getUniformLocation(program, 'uHover')
+    };
+    var resolutionScale = 1;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    function resize() {
+      var rect = entryPoster.getBoundingClientRect();
+      var width = Math.max(1, Math.round(rect.width * dpr * resolutionScale));
+      var height = Math.max(1, Math.round(rect.height * dpr * resolutionScale));
+      if (rippleCanvas.width !== width || rippleCanvas.height !== height) {
+        rippleCanvas.width = width;
+        rippleCanvas.height = height;
+        gl.viewport(0, 0, width, height);
+      }
+    }
+
+    function draw(now) {
+      if (!rippleState.running || (preloaderEl && preloaderEl.classList.contains('hide'))) {
+        rippleState.running = false;
+        return;
+      }
+      resize();
+      rippleState.time = now * 0.001;
+      gl.uniform2f(uniforms.resolution, rippleCanvas.width, rippleCanvas.height);
+      gl.uniform2f(uniforms.imageResolution, entryPosterImage.naturalWidth || 1920, entryPosterImage.naturalHeight || 1080);
+      gl.uniform2f(uniforms.mouse, rippleState.mouseX, rippleState.mouseY);
+      gl.uniform1f(uniforms.time, rippleState.time);
+      gl.uniform1f(uniforms.strength, 0.2);
+      gl.uniform1f(uniforms.swirl, 1.0);
+      gl.uniform1f(uniforms.rings, 4.0);
+      gl.uniform1f(uniforms.brush, 240.0);
+      gl.uniform1f(uniforms.hover, rippleState.hover);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      requestAnimationFrame(draw);
+    }
+
+    rippleState.initialized = true;
+    rippleState.running = true;
+    entryPoster.classList.add('has-ripple-canvas');
+    rippleCanvas.classList.add('is-ready');
+    requestAnimationFrame(draw);
+  }
+
+  if (!useMobileVideo && entryPosterImage) {
+    if (entryPosterImage.complete && entryPosterImage.naturalWidth) initRippleDistortion();
+    else entryPosterImage.addEventListener('load', initRippleDistortion, { once: true });
+  }
+
+  if (!useMobileVideo && entryPoster && !isTouch) {
+    entryPoster.addEventListener('pointerenter', function () {
+      entryPoster.classList.add('is-rippling');
+      rippleState.hover = 1;
+    });
+    entryPoster.addEventListener('pointermove', function (e) {
+      var r = entryPoster.getBoundingClientRect();
+      var x = ((e.clientX - r.left) / r.width) * 100;
+      var y = ((e.clientY - r.top) / r.height) * 100;
+      var tiltX = ((x - 50) / 50) * 8;
+      var tiltY = ((y - 50) / 50) * 8;
+      rippleState.mouseX = Math.max(0, Math.min(1, x / 100));
+      rippleState.mouseY = Math.max(0, Math.min(1, 1 - y / 100));
+      rippleState.hover = 1;
+      entryPoster.style.setProperty('--ripple-x', x.toFixed(2) + '%');
+      entryPoster.style.setProperty('--ripple-y', y.toFixed(2) + '%');
+      entryPoster.style.setProperty('--tilt-x', tiltX.toFixed(2) + 'px');
+      entryPoster.style.setProperty('--tilt-y', tiltY.toFixed(2) + 'px');
+    });
+    entryPoster.addEventListener('pointerleave', function () {
+      entryPoster.classList.remove('is-rippling');
+      rippleState.hover = 0;
+      entryPoster.style.setProperty('--tilt-x', '0px');
+      entryPoster.style.setProperty('--tilt-y', '0px');
+    });
+  }
 
   /* 项目卡片：点击时记录当前位置，返回时恢复 */
   var projectCards = $$('.project-card');
@@ -2080,11 +2507,11 @@ footer { display: flex; align-items: center; justify-content: space-between; }
     });
   }
 
-  /* AI 灵感：8 张卡片轮播，右下角小圆形切换按钮（reduced-motion 时静止） */
+  /* AI 灵感：7 张卡片轮播，右下角小圆形切换按钮（reduced-motion 时静止） */
   var aiWrap = $('#ai-wrap');
   var aiTrack = $('#ai-track');
   if (aiTrack) {
-    var aiNames = ['1','2','3','4','5','6','7','8'];
+    var aiNames = ['1','2','4','5','6','7','8'];
     var aiItems = aiNames.map(function (n) {
       var d = document.createElement('div');
       d.className = 'ai-video';
